@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Painel de Mobilidade — SEINFRA/AM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --az:#002D72;--az2:#003A8C;--az-cl:#EBF0FA;--az-bd:#C4D0E8;
+  --am:#F5A623;--am-cl:#FEF3DC;--am-bd:#F5C878;
+  --vd:#007B3E;--vd-cl:#E6F5ED;
+  --vm:#C0392B;--vm-cl:#FDEAEA;
+  --rx:#6C3483;--rx-cl:#F3EFF8;
+  --cn:#0E7490;--cn-cl:#E0F2FE;
+  --tz:#1A2540;--cz:#4A5568;--cz2:#8896A8;
+  --bg:#F4F6FB;--bd:#E0E6F0;--wh:#FFFFFF;
+  --fn:'Outfit',sans-serif;
+  --sh:0 2px 16px rgba(0,45,114,.09),0 0 0 1px var(--bd);
+  --sh2:0 8px 32px rgba(0,45,114,.14);
+  --sh3:0 20px 60px rgba(0,45,114,.2);
+  --r:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;scroll-behavior:smooth}
+body{font-family:var(--fn);background:var(--bg);color:var(--tz);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(0,45,114,.14)}
+
+/* ═══ TOPBAR ═══ */
+.topbar{background:var(--az);padding:.4rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2000}
+.topbar-l{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:500}
+.topbar-r{display:flex;align-items:center;gap:.6rem;font-size:.6rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--am)}
+.topbar-dot{width:6px;height:6px;border-radius:50%;background:var(--am);box-shadow:0 0 8px var(--am);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes scaleIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ═══ HEADER ═══ */
+.gov-header{background:var(--wh);border-bottom:2px solid var(--az);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(41,50,88,.08);position:sticky;top:33px;z-index:1900}
+.gov-logo img{height:72px;width:auto;object-fit:contain}
+.gov-right{display:flex;align-items:center;gap:.75rem}
+.gov-badge{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--az);padding:.3em 1em;border-radius:100px}
+.gov-clock{font-size:.62rem;font-weight:600;color:var(--cz2);letter-spacing:.05em}
+
+/* ═══ HERO ═══ */
+.hero{background:linear-gradient(135deg,#001845 0%,var(--az) 60%,#003d8f 100%);padding:3.5rem 2rem 2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-55deg,transparent,transparent 46px,rgba(255,255,255,.015) 46px,rgba(255,255,255,.015) 47px)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--am),rgba(245,166,35,0))}
+.hero-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--am);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.hero-eyebrow::before{content:'';display:inline-block;width:24px;height:2px;background:var(--am)}
+.hero-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:.5rem}
+.hero-title span{color:var(--am)}
+.hero-sub{font-size:.95rem;color:rgba(255,255,255,.55);font-weight:400;max-width:560px;line-height:1.6}
+.hero-meta{display:flex;align-items:center;gap:1.5rem;margin-top:2rem;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-v{font-size:1.6rem;font-weight:900;color:var(--am);line-height:1}
+.hero-stat-l{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:.2rem}
+.hero-div{width:1px;height:40px;background:rgba(255,255,255,.15)}
+
+/* ═══ GRID PRINCIPAL ═══ */
+.main-grid{max-width:1200px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.main-grid{grid-template-columns:1fr;padding:1rem}}
+
+/* ═══ CARDS PRINCIPAIS ═══ */
+.main-card{background:var(--wh);border-radius:16px;box-shadow:var(--sh);overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;position:relative}
+.main-card:hover{transform:translateY(-4px);box-shadow:var(--sh3)}
+.main-card-header{padding:1.5rem 1.5rem 1rem;display:flex;align-items:center;gap:1rem}
+.main-card-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.main-card-icon.az{background:var(--az-cl);color:var(--az)}
+.main-card-icon.am{background:var(--am-cl);color:#B8620A}
+.main-card-icon.vd{background:var(--vd-cl);color:var(--vd)}
+.main-card-label{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cz2);margin-bottom:.25rem}
+.main-card-title{font-size:1.15rem;font-weight:800;color:var(--tz);line-height:1.2}
+.main-card-body{padding:0 1.5rem 1.5rem}
+.main-card-desc{font-size:.8rem;color:var(--cz);line-height:1.6;margin-bottom:1rem}
+.main-card-btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--wh);background:var(--az);padding:.5em 1.2em;border-radius:8px;text-decoration:none;transition:background .15s;border:none;cursor:pointer}
+.main-card-btn:hover{background:var(--az2)}
+.main-card-btn.am{background:var(--am);color:#3d1f00}
+.main-card-btn.vd{background:var(--vd)}
+.main-card-strip{height:4px;background:var(--az)}
+.main-card-strip.am{background:var(--am)}
+.main-card-strip.vd{background:var(--vd)}
+
+/* ═══ MODAIS (5 ícones dentro do card Modais) ═══ */
+.modal-icons{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:0 0 1rem}
+.modal-icon-btn{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.8rem .4rem;background:var(--bg);border-radius:10px;border:1.5px solid var(--bd);cursor:pointer;transition:all .15s;text-align:center}
+.modal-icon-btn:hover{background:var(--az-cl);border-color:var(--az-bd);transform:translateY(-2px)}
+.modal-icon-btn.active{background:var(--az-cl);border-color:var(--az)}
+.modal-icon-btn i{font-size:1.4rem}
+.modal-icon-btn span{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cz);line-height:1.2}
+.modal-icon-btn:hover span,.modal-icon-btn.active span{color:var(--az)}
+
+/* ═══ OVERLAY PAINEL ═══ */
+.panel-overlay{position:fixed;inset:0;background:rgba(0,29,80,.7);z-index:3000;display:none;align-items:flex-start;justify-content:center;padding:0;backdrop-filter:blur(4px)}
+.panel-overlay.show{display:flex}
+.panel-wrap{background:var(--wh);width:100%;max-width:100%;height:100vh;overflow:hidden;display:flex;flex-direction:column;animation:scaleIn .2s ease}
+
+/* ═══ PANEL HEADER ═══ */
+.panel-hdr{background:var(--az);padding:.8rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-shrink:0;min-height:56px}
+.panel-hdr-icon{font-size:1.3rem;flex-shrink:0}
+.panel-hdr-title{font-size:1rem;font-weight:800;color:#fff;flex:1;letter-spacing:-.01em}
+.panel-hdr-sub{font-size:.62rem;color:rgba(255,255,255,.5);letter-spacing:.06em;text-transform:uppercase;margin-top:.1rem}
+.panel-close{background:rgba(255,255,255,.12);border:none;color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.panel-close:hover{background:rgba(255,255,255,.25)}
+
+/* ═══ TABS ═══ */
+.tab-bar{background:var(--wh);border-bottom:2px solid var(--bd);display:flex;gap:0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-bar::-webkit-scrollbar{height:3px}
+.tab-btn{font-family:var(--fn);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cz2);background:none;border:none;padding:.85rem 1.4rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:.4rem}
+.tab-btn:hover{color:var(--az);background:var(--az-cl)}
+.tab-btn.active{color:var(--az);border-bottom-color:var(--am);background:var(--az-cl)}
+.tab-content{flex:1;overflow-y:auto;min-height:0}
+.tab-pane{display:none;height:100%}
+.tab-pane.active{display:flex;flex-direction:column;animation:fadeIn .2s ease}
+
+/* ═══ KPI GRID ═══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.kpi{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.1rem 1.3rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.az::before{background:var(--az)}
+.kpi.am::before{background:var(--am)}
+.kpi.vd::before{background:var(--vd)}
+.kpi.vm::before{background:var(--vm)}
+.kpi.rx::before{background:var(--rx)}
+.kpi.cn::before{background:var(--cn)}
+.kpi-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem}
+.kpi-lbl{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cz2)}
+.kpi-ico{font-size:.9rem;opacity:.7}
+.kpi-val{font-size:1.6rem;font-weight:900;color:var(--tz);letter-spacing:-.03em;line-height:1}
+.kpi-sub{font-size:.6rem;color:var(--cz2);margin-top:.2rem}
+
+/* ═══ CHART CONTAINERS ═══ */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.chart-grid.g1{grid-template-columns:1fr}
+.chart-grid.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:700px){.chart-grid,.chart-grid.g3{grid-template-columns:1fr}}
+.chart-card{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.2rem;overflow:hidden}
+.chart-title{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cz);margin-bottom:1rem}
+.chart-wrap{position:relative;height:200px}
+.chart-wrap canvas{max-height:200px}
+
+/* ═══ SECAO TITULO ═══ */
+.sec-title{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cz2);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.4rem}
+.sec-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--am);border-radius:2px}
+
+/* ═══ RANK LIST ═══ */
+.rank-list{display:flex;flex-direction:column;gap:.5rem}
+.rank-item{display:flex;align-items:center;gap:.6rem}
+.rank-num{font-size:.6rem;font-weight:800;color:var(--cz2);width:18px;text-align:right;flex-shrink:0}
+.rank-bar-wrap{flex:1;height:22px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative}
+.rank-bar-fill{height:100%;border-radius:4px;transition:width .4s ease;display:flex;align-items:center;padding:0 .5rem}
+.rank-bar-label{font-size:.6rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-val{font-size:.62rem;font-weight:700;color:var(--cz);width:50px;text-align:right;flex-shrink:0}
+
+/* ═══ MAPA ═══ */
+.map-container{background:var(--bg);border-radius:12px;overflow:hidden;border:1px solid var(--bd)}
+.leaflet-container{font-family:var(--fn)}
+
+/* ═══ TABELA ═══ */
+.tbl-wrap{background:var(--wh);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:1rem}
+.tbl-top{padding:.8rem 1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.tbl-search{font-family:var(--fn);font-size:.78rem;padding:.5rem .8rem;border:1.5px solid var(--bd);border-radius:8px;outline:none;min-width:200px;flex:1}
+.tbl-search:focus{border-color:var(--az)}
+.tbl-select{font-family:var(--fn);font-size:.78rem;padding:.5rem .8rem;border:1.5px solid var(--bd);border-radius:8px;outline:none;background:var(--wh);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238896A8' stroke-width='1.3' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center;padding-right:1.8rem}
+.tbl-select:focus{border-color:var(--az)}
+.tbl-count{font-size:.62rem;font-weight:600;color:var(--cz2);margin-left:auto;white-space:nowrap}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--az-cl)}
+th{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--az);padding:.7rem .9rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--az-bd)}
+td{font-size:.72rem;color:var(--cz);padding:.6rem .9rem;border-bottom:1px solid var(--bd);vertical-align:middle}
+tr:hover td{background:var(--bg)}
+tr:last-child td{border-bottom:none}
+.mono{font-family:monospace;font-size:.68rem}
+
+/* ═══ PILL / BADGE ═══ */
+.pill{display:inline-flex;align-items:center;gap:.2rem;font-size:.55rem;font-weight:700;padding:.2em .6em;border-radius:100px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.pill.az{background:var(--az-cl);color:var(--az);border:1px solid var(--az-bd)}
+.pill.am{background:var(--am-cl);color:#8B5A00;border:1px solid var(--am-bd)}
+.pill.vd{background:var(--vd-cl);color:var(--vd);border:1px solid rgba(0,123,62,.2)}
+.pill.vm{background:var(--vm-cl);color:var(--vm);border:1px solid rgba(192,57,43,.2)}
+.pill.rx{background:var(--rx-cl);color:var(--rx);border:1px solid rgba(108,52,131,.2)}
+.pill.cn{background:var(--cn-cl);color:var(--cn);border:1px solid rgba(14,116,144,.2)}
+.pill.cz{background:var(--bg);color:var(--cz);border:1px solid var(--bd)}
+
+/* ═══ PAGINACAO ═══ */
+.pag{display:flex;align-items:center;gap:.3rem;padding:.75rem 1rem;justify-content:center;flex-wrap:wrap}
+.pag-btn{font-family:var(--fn);font-size:.62rem;font-weight:700;padding:.3em .7em;border:1.5px solid var(--bd);border-radius:6px;background:var(--wh);color:var(--cz);cursor:pointer;transition:all .12s}
+.pag-btn:hover:not(:disabled){background:var(--az-cl);border-color:var(--az-bd);color:var(--az)}
+.pag-btn.active{background:var(--az);border-color:var(--az);color:#fff}
+.pag-btn:disabled{opacity:.4;cursor:default}
+.pag-info{font-size:.6rem;color:var(--cz2);margin-right:.5rem}
+
+/* ═══ PADDING PAINEL ═══ */
+.p-content{padding:1.5rem 2rem;flex:1;min-height:0}
+@media(max-width:600px){.p-content{padding:1rem}}
+.p-content-full{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+
+/* ═══ ACCORDION ═══ */
+.acc-group{border:1px solid var(--bd);border-radius:10px;margin-bottom:.6rem;overflow:hidden}
+.acc-head{padding:.8rem 1rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;transition:background .12s;user-select:none}
+.acc-head:hover{background:var(--bg)}
+.acc-head.open{background:var(--az-cl)}
+.acc-cod{font-size:.85rem;font-weight:800;color:var(--az)}
+.acc-info{flex:1;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.acc-stat{font-size:.62rem;font-weight:600;color:var(--cz2);background:var(--bg);padding:.15em .5em;border-radius:4px}
+.acc-chev{font-size:.7rem;color:var(--cz2);transition:transform .2s}
+.acc-head.open .acc-chev{transform:rotate(180deg)}
+.acc-body{display:none;border-top:1px solid var(--bd);padding:1rem;background:var(--bg)}
+.acc-head.open+.acc-body{display:block}
+
+/* ═══ SPINNER ═══ */
+.spinner{width:18px;height:18px;border:2px solid var(--az-bd);border-top-color:var(--az);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.loading-bar{display:none;align-items:center;gap:.6rem;padding:.8rem 1.2rem;background:var(--az-cl);border-radius:8px;font-size:.78rem;font-weight:600;color:var(--az);margin-bottom:1rem}
+.loading-bar.show{display:flex}
+
+/* ═══ EMPTY STATE ═══ */
+.empty{text-align:center;padding:3rem 1rem;color:var(--cz2)}
+.empty-ico{font-size:2.5rem;margin-bottom:.75rem;opacity:.4}
+.empty-txt{font-size:.85rem;font-weight:600}
+
+/* ═══ EXPORT BTN ═══ */
+.btn{font-family:var(--fn);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.5em 1.1em;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s}
+.btn-az{background:var(--az);color:#fff}.btn-az:hover{background:var(--az2)}
+.btn-am{background:var(--am);color:#3d1f00}.btn-am:hover{background:#e09515}
+.btn-vd{background:var(--vd);color:#fff}.btn-vd:hover{background:#006130}
+.btn-vm{background:var(--vm);color:#fff}
+.btn-out{background:transparent;color:var(--az);border:1.5px solid var(--az)}.btn-out:hover{background:var(--az-cl)}
+.btn-sm{font-size:.6rem;padding:.35em .8em}
+
+/* ═══ CONSULTA CARD ═══ */
+.c-card{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.c-card-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cz2);margin-bottom:.75rem}
+
+/* ═══ ICM MAP ═══ */
+.icm-legend{position:absolute;bottom:14px;left:14px;z-index:800;background:var(--wh);border-radius:8px;box-shadow:var(--sh);padding:.7rem;min-width:120px}
+.icm-leg-item{display:flex;align-items:center;gap:.4rem;font-size:.62rem;font-weight:600;color:var(--cz);margin-bottom:.3rem}
+.icm-leg-item:last-child{margin-bottom:0}
+.icm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══ MAPA CONTROLES ═══ */
+.map-ctrl-bar{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-top:1px solid var(--bd);background:var(--bg);flex-wrap:wrap}
+
+/* ═══ CHECKBOX LIST ═══ */
+.chk-list{display:flex;flex-direction:column;gap:.3rem;max-height:300px;overflow-y:auto}
+.chk-item{display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;border-radius:6px;cursor:pointer;transition:background .1s}
+.chk-item:hover{background:var(--bg)}
+.chk-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--az);cursor:pointer;flex-shrink:0}
+.chk-item label{font-size:.72rem;font-weight:500;color:var(--cz);cursor:pointer;flex:1;display:flex;justify-content:space-between;align-items:center}
+.chk-ext{font-size:.58rem;color:var(--cz2)}
+
+/* ═══ TOTAL EXT BADGE ═══ */
+.ext-total{background:var(--az);color:#fff;border-radius:8px;padding:.6rem 1rem;font-size:.85rem;font-weight:800;display:inline-flex;align-items:center;gap:.4rem}
+
+/* ═══ TERM CARD ═══ */
+.term-card{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.term-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--az)}
+.term-card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
+.term-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.8rem;margin-bottom:1rem}
+
+/* ═══ BI SIDEBAR ═══ */
+.bi-layout{display:flex;flex:1;min-height:0}
+.bi-side{width:220px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto}
+.bi-nav-item{display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;cursor:pointer;transition:background .12s;border-left:3px solid transparent;font-size:.75rem;font-weight:600;color:var(--cz)}
+.bi-nav-item:hover{background:var(--az-cl);color:var(--az)}
+.bi-nav-item.active{background:var(--az-cl);color:var(--az);border-left-color:var(--am)}
+.bi-nav-sect{font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cz2);padding:.75rem 1rem .25rem;border-top:1px solid var(--bd)}
+.bi-nav-sect:first-child{border-top:none}
+.bi-main{flex:1;overflow-y:auto;min-height:0}
+.bi-page{display:none;padding:1.5rem 2rem;animation:fadeIn .2s}
+.bi-page.active{display:block}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:700px){
+  .bi-side{display:none}
+  .gov-header{top:28px}
+  .topbar-l{display:none}
+  .panel-hdr-title{font-size:.88rem}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .chart-grid{grid-template-columns:1fr}
+}
+
+/* ═══ MINI MODAL (detalhes) ═══ */
+.mini-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9000;display:none}
+.mini-modal-overlay.show{display:block}
+.mini-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:var(--wh);border-radius:14px;box-shadow:var(--sh3);width:480px;max-width:calc(100vw - 24px);max-height:80vh;display:none;flex-direction:column;overflow:hidden}
+.mini-modal.show{display:flex;animation:scaleIn .2s}
+.mini-modal-hdr{padding:.75rem 1rem;background:var(--az);display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.mini-modal-title{font-size:.85rem;font-weight:700;color:#fff;flex:1}
+.mini-modal-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:1.1rem;cursor:pointer;padding:2px 6px;border-radius:4px}
+.mini-modal-close:hover{color:#fff;background:rgba(255,255,255,.15)}
+.mini-modal-body{overflow-y:auto;flex:1;padding:.9rem}
+
+/* ═══ FOOTER ═══ */
+footer{background:var(--az);color:rgba(255,255,255,.4);text-align:center;padding:1rem;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;margin-top:2rem}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="topbar-l">SEINFRA/AM — Secretaria de Estado de Infraestrutura do Amazonas</span>
+  <div class="topbar-r"><span class="topbar-dot"></span><span id="clk">--:--</span></div>
+</div>
+
+<!-- HEADER -->
+<header class="gov-header">
+  <div class="gov-logo">
+    <img src="https://leonzordhue.github.io/atlas-amazonas/assets/logo_seinfra.png" alt="SEINFRA/AM" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+    <div style="display:none;align-items:center;gap:.6rem">
+      <div style="width:42px;height:42px;border-radius:8px;background:var(--az);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🏛️</div>
+      <div><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cz2)">Governo do Estado</div><div style="font-size:1rem;font-weight:800;color:var(--az)">SEINFRA/AM</div></div>
+    </div>
+  </div>
+  <div class="gov-right">
+    <span class="gov-badge">DMOB — Dpto. de Mobilidade</span>
+    <span class="gov-clock" id="dt">—</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Painel Integrado de Mobilidade</div>
+    <h1 class="hero-title">Infraestrutura & <span>Mobilidade</span><br>do Amazonas</h1>
+    <p class="hero-sub">Plataforma unificada de monitoramento, análise e inteligência operacional sobre a infraestrutura de transportes do Estado do Amazonas.</p>
+    <div class="hero-meta">
+      <div class="hero-stat"><div class="hero-stat-v" id="hs-rod">—</div><div class="hero-stat-l">Trechos de Rodovias</div></div>
+      <div class="hero-div"></div>
+      <div class="hero-stat"><div class="hero-stat-v" id="hs-ram">—</div><div class="hero-stat-l">Ramais Cadastrados</div></div>
+      <div class="hero-div"></div>
+      <div class="hero-stat"><div class="hero-stat-v" id="hs-via">—</div><div class="hero-stat-l">Vias Urbanas</div></div>
+      <div class="hero-div"></div>
+      <div class="hero-stat"><div class="hero-stat-v" id="hs-aero">—</div><div class="hero-stat-l">Aeródromos</div></div>
+      <div class="hero-div"></div>
+      <div class="hero-stat"><div class="hero-stat-v" id="hs-term">—</div><div class="hero-stat-l">Terminais Flutuantes</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- GRID PRINCIPAL -->
+<div class="main-grid" style="padding-top:2rem">
+
+  <!-- CARD 1: MODAIS -->
+  <div class="main-card" style="grid-column:1">
+    <div class="main-card-strip"></div>
+    <div class="main-card-header">
+      <div class="main-card-icon az">🗺️</div>
+      <div>
+        <div class="main-card-label">Infraestrutura</div>
+        <div class="main-card-title">Modais de Transporte</div>
+      </div>
+    </div>
+    <div class="main-card-body">
+      <p class="main-card-desc">Acesso por modal de infraestrutura: análise detalhada de rodovias, ramais rurais, viário urbano, aeródromos e terminais fluviais.</p>
+      <div class="modal-icons">
+        <div class="modal-icon-btn" onclick="abrirPanel('rod')"><span>🛣️</span><span>Rodovias</span></div>
+        <div class="modal-icon-btn" onclick="abrirPanel('ram')"><span>🌿</span><span>Ramais</span></div>
+        <div class="modal-icon-btn" onclick="abrirPanel('via')"><span>🏙️</span><span>Viário</span></div>
+        <div class="modal-icon-btn" onclick="abrirPanel('aero')"><span>✈️</span><span>Aeródromos</span></div>
+        <div class="modal-icon-btn" style="grid-column:span 2" onclick="abrirPanel('term')"><span>⚓</span><span>Terminais Flutuantes</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 2: BI -->
+  <div class="main-card" onclick="abrirPanel('bi')">
+    <div class="main-card-strip am"></div>
+    <div class="main-card-header">
+      <div class="main-card-icon am">📊</div>
+      <div>
+        <div class="main-card-label">Business Intelligence</div>
+        <div class="main-card-title">Dashboard Analítico</div>
+      </div>
+    </div>
+    <div class="main-card-body">
+      <p class="main-card-desc">Visão analítica integrada de todos os modais: KPIs consolidados, rankings, distribuições e indicadores de desempenho para apoio à decisão.</p>
+      <button class="main-card-btn am" onclick="event.stopPropagation();abrirPanel('bi')">📊 Acessar Dashboard</button>
+    </div>
+  </div>
+
+  <!-- CARD 3: ATLAS -->
+  <div class="main-card" onclick="abrirPanel('atlas')">
+    <div class="main-card-strip vd"></div>
+    <div class="main-card-header">
+      <div class="main-card-icon vd">🗺️</div>
+      <div>
+        <div class="main-card-label">Georreferenciamento</div>
+        <div class="main-card-title">Atlas do Amazonas</div>
+      </div>
+    </div>
+    <div class="main-card-body">
+      <p class="main-card-desc">Mapa interativo com todas as camadas de infraestrutura sobrepostas: rodovias, ramais, aeródromos, terminais, municípios e muito mais.</p>
+      <button class="main-card-btn vd" onclick="event.stopPropagation();abrirPanel('atlas')">🗺️ Abrir Atlas</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ PAINÉIS MODAIS ══════════════════════════════════════════ -->
+
+<!-- ═══ PAINEL RODOVIAS ═══ -->
+<div class="panel-overlay" id="panel-rod">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">🛣️</span>
+    <div><div class="panel-hdr-title">Rodovias Estaduais — Amazonas</div><div class="panel-hdr-sub">Análise de trechos, sinistros e condição de manutenção</div></div>
+    <button class="panel-close" onclick="fecharPanel('rod')">✕</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('rod',0,this)">📊 Visão Geral</button>
+    <button class="tab-btn" onclick="setTab('rod',1,this)">🔍 Consulta</button>
+    <button class="tab-btn" onclick="setTab('rod',2,this)">🚨 Sinistros</button>
+    <button class="tab-btn" onclick="setTab('rod',3,this)">🛣️ ICM</button>
+  </div>
+  <div class="tab-content">
+    <!-- ABA GERAL -->
+    <div class="tab-pane active" id="rod-t0">
+      <div class="p-content">
+        <div class="loading-bar show" id="rod-load"><div class="spinner"></div>Carregando dados de rodovias…</div>
+        <div id="rod-kpi" class="kpi-grid"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Distribuição por Pavimentação</div><div class="chart-wrap"><canvas id="ch-rod-pav"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Trechos por Jurisdição</div><div class="chart-wrap"><canvas id="ch-rod-jur"></canvas></div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Extensão por Rodovia (Top 10)</div><div class="chart-wrap" style="height:280px"><canvas id="ch-rod-ext"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Distribuição por Região</div><div class="chart-wrap"><canvas id="ch-rod-reg"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- ABA CONSULTA -->
+    <div class="tab-pane" id="rod-t1">
+      <div class="p-content">
+        <div class="c-card">
+          <div class="c-card-title">Selecionar Rodovia</div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:end">
+            <div><label style="font-size:.65rem;font-weight:700;color:var(--cz2);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.3rem">Rodovia</label>
+            <select class="tbl-select" id="sel-rod" style="width:100%" onchange="consultarRodovia()"><option value="">— Selecione uma rodovia —</option></select></div>
+            <button class="btn btn-am btn-sm" onclick="exportPDFRod()">📄 PDF</button>
+          </div>
+        </div>
+        <div id="rod-result" style="display:none">
+          <div class="kpi-grid" id="rod-r-kpi"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="map-container" id="rod-map" style="height:300px"></div>
+            <div>
+              <div class="sec-title">Contratos / Obras nesta Rodovia</div>
+              <div id="rod-obras-list" style="max-height:280px;overflow-y:auto"></div>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <div class="tbl-top"><span class="sec-title" style="margin:0;border:none">Trechos Cadastrados</span><span class="tbl-count" id="rod-r-cnt"></span></div>
+            <div class="tbl-scroll"><table id="rod-r-table"><thead></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ABA SINISTROS -->
+    <div class="tab-pane" id="rod-t2">
+      <div class="p-content">
+        <div class="loading-bar" id="sin-load"><div class="spinner"></div>Carregando sinistros…</div>
+        <div class="kpi-grid" id="sin-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Sinistros por Tipo</div><div class="chart-wrap"><canvas id="ch-sin-tipo"></canvas></div></div>
+          <div class="chart-card">
+            <div class="chart-title">Ranking — Rodovias com Mais Ocorrências</div>
+            <div id="rank-sin-rod" class="rank-list" style="margin-top:.5rem"></div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <input class="tbl-search" id="sin-q" placeholder="Buscar…" oninput="filtrarSin()"/>
+            <select class="tbl-select" id="sin-rod-f" onchange="filtrarSin()"><option value="">Todas as rodovias</option></select>
+            <select class="tbl-select" id="sin-tipo-f" onchange="filtrarSin()"><option value="">Todos os tipos</option></select>
+            <select class="tbl-select" id="sin-portal-f" onchange="filtrarSin()"><option value="">Todos os portais</option></select>
+            <button class="btn btn-out btn-sm" onclick="exportCSV(DB.filtered.sin,'sinistros.csv')">⬇ CSV</button>
+            <span class="tbl-count" id="sin-cnt"></span>
+          </div>
+          <div class="tbl-scroll"><table id="sin-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="sin-pag"></div>
+        </div>
+      </div>
+    </div>
+    <!-- ABA ICM -->
+    <div class="tab-pane" id="rod-t3">
+      <div class="p-content-full">
+        <div style="padding:.75rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;background:var(--wh)">
+          <select class="tbl-select" id="icm-rod-sel" onchange="renderICM()" style="min-width:200px"><option value="">Todas as rodovias</option></select>
+          <span style="font-size:.65rem;color:var(--cz2)">O ICM indica o índice de condição de manutenção. Pontos vermelhos = críticos.</span>
+        </div>
+        <div id="map-icm" style="flex:1;min-height:400px"></div>
+        <div class="map-ctrl-bar">
+          <div class="icm-legend" style="position:static">
+            <div class="icm-leg-item"><div class="icm-dot" style="background:#C0392B"></div>Crítico (ICM < 40)</div>
+            <div class="icm-leg-item"><div class="icm-dot" style="background:#E67E22"></div>Regular (40–70)</div>
+            <div class="icm-leg-item"><div class="icm-dot" style="background:#27AE60"></div>Bom (> 70)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL RAMAIS ═══ -->
+<div class="panel-overlay" id="panel-ram">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">🌿</span>
+    <div><div class="panel-hdr-title">Ramais Rurais — Amazonas</div><div class="panel-hdr-sub">Análise de ramais por município, obras e extensão</div></div>
+    <button class="panel-close" onclick="fecharPanel('ram')">✕</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('ram',0,this)">📊 Visão Geral</button>
+    <button class="tab-btn" onclick="setTab('ram',1,this)">🔍 Consulta</button>
+    <button class="tab-btn" onclick="setTab('ram',2,this)">🏗️ Obras</button>
+  </div>
+  <div class="tab-content">
+    <div class="tab-pane active" id="ram-t0">
+      <div class="p-content">
+        <div class="loading-bar show" id="ram-load"><div class="spinner"></div>Carregando dados de ramais…</div>
+        <div class="kpi-grid" id="ram-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Situação dos Ramais</div><div class="chart-wrap"><canvas id="ch-ram-sit"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Distribuição por Calha / Bacia</div><div class="chart-wrap"><canvas id="ch-ram-cal"></canvas></div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card" style="grid-column:span 2">
+            <div class="chart-title">Top 5 Municípios com Mais Ramais</div>
+            <div id="rank-ram-mun" class="rank-list" style="margin-top:.5rem"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="ram-t1">
+      <div class="p-content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="c-card">
+            <div class="c-card-title">Município</div>
+            <select class="tbl-select" id="ram-mun-sel" style="width:100%" onchange="selecionarMunRam()"><option value="">— Selecione —</option></select>
+          </div>
+          <div class="c-card" id="ram-mun-kpi-wrap" style="display:none">
+            <div class="c-card-title" id="ram-mun-title">—</div>
+            <div id="ram-mun-stats" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
+          </div>
+        </div>
+        <div id="ram-consult-wrap" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div>
+              <div class="c-card">
+                <div class="c-card-title">Ramal</div>
+                <div style="display:flex;gap:.4rem;margin-bottom:.6rem">
+                  <input class="tbl-search" id="ram-busca" placeholder="Buscar ramal pelo nome…" oninput="buscarRamal()" style="flex:1"/>
+                  <button class="btn btn-az btn-sm" onclick="buscarRamal()">🔍</button>
+                </div>
+                <select class="tbl-select" id="ram-ramal-sel" style="width:100%" onchange="selecionarRamal()"><option value="">— Selecione ou busque —</option></select>
+              </div>
+              <div class="c-card" id="ram-ramal-info" style="display:none">
+                <div id="ram-ramal-stats" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem"></div>
+                <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                  <button class="btn btn-az btn-sm" onclick="abrirGMapsRamal()">📍 Google Maps</button>
+                  <button class="btn btn-am btn-sm" onclick="exportPDFRamal()">📄 Exportar PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="map-container" id="ram-map" style="height:360px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="ram-t2">
+      <div class="p-content">
+        <div class="kpi-grid" id="ram-obras-kpi"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <input class="tbl-search" id="ram-obras-q" placeholder="Buscar contrato ou ramal…" oninput="filtrarObrasRam()"/>
+            <select class="tbl-select" id="ram-obras-mun" onchange="filtrarObrasRam()"><option value="">Todos os municípios</option></select>
+            <select class="tbl-select" id="ram-obras-sit" onchange="filtrarObrasRam()"><option value="">Todas as situações</option></select>
+            <button class="btn btn-out btn-sm" onclick="exportCSV(DB.filtered.ram_obras||[],'obras_ramais.csv')">⬇ CSV</button>
+            <span class="tbl-count" id="ram-obras-cnt"></span>
+          </div>
+          <div class="tbl-scroll"><table id="ram-obras-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="ram-obras-pag"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL VIÁRIO ═══ -->
+<div class="panel-overlay" id="panel-via">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">🏙️</span>
+    <div><div class="panel-hdr-title">Viário Urbano Municipal — Amazonas</div><div class="panel-hdr-sub">Análise não inclui Manaus</div></div>
+    <button class="panel-close" onclick="fecharPanel('via')">✕</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('via',0,this)">📊 Visão Geral</button>
+    <button class="tab-btn" onclick="setTab('via',1,this)">🔍 Consulta</button>
+    <button class="tab-btn" onclick="setTab('via',2,this)">🏗️ Obras</button>
+  </div>
+  <div class="tab-content">
+    <div class="tab-pane active" id="via-t0">
+      <div class="p-content">
+        <div class="loading-bar show" id="via-load"><div class="spinner"></div>Carregando viário…</div>
+        <div class="kpi-grid" id="via-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Top 10 Municípios (Vias)</div><div class="chart-wrap" style="height:260px"><canvas id="ch-via-top"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Extensão por Município (Top 5)</div><div id="rank-via-ext" class="rank-list" style="margin-top:.5rem"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="via-t1">
+      <div class="p-content">
+        <div class="c-card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+            <div><label style="font-size:.65rem;font-weight:700;color:var(--cz2);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.3rem">Município</label>
+            <select class="tbl-select" id="via-mun-sel" style="width:100%" onchange="selecionarMunVia()"><option value="">— Selecione —</option></select></div>
+            <div style="display:flex;align-items:flex-end;gap:.4rem">
+              <span id="via-ext-total" class="ext-total" style="display:none">📏 <span id="via-ext-v">0</span> m selecionados</span>
+              <button class="btn btn-am btn-sm" onclick="exportPDFVia()">📄 PDF</button>
+            </div>
+          </div>
+        </div>
+        <div id="via-consult" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+          <div>
+            <div class="sec-title">Ruas / Logradouros</div>
+            <div style="display:flex;gap:.4rem;margin-bottom:.6rem">
+              <button class="btn btn-out btn-sm" onclick="selecionarTodasVias(true)">✓ Todas</button>
+              <button class="btn btn-out btn-sm" onclick="selecionarTodasVias(false)">✗ Nenhuma</button>
+            </div>
+            <div class="chk-list" id="via-ruas-list"></div>
+          </div>
+          <div class="map-container" id="via-map" style="height:400px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="via-t2">
+      <div class="p-content">
+        <div class="kpi-grid" id="via-obras-kpi"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <input class="tbl-search" id="via-obras-q" placeholder="Buscar…" oninput="filtrarObrasVia()"/>
+            <select class="tbl-select" id="via-obras-mun" onchange="filtrarObrasVia()"><option value="">Todos os municípios</option></select>
+            <span class="tbl-count" id="via-obras-cnt"></span>
+          </div>
+          <div class="tbl-scroll"><table id="via-obras-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="via-obras-pag"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL AERÓDROMOS ═══ -->
+<div class="panel-overlay" id="panel-aero">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">✈️</span>
+    <div><div class="panel-hdr-title">Aeródromos do Amazonas</div><div class="panel-hdr-sub">Cadastro, análise e cobertura municipal</div></div>
+    <button class="panel-close" onclick="fecharPanel('aero')">✕</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('aero',0,this)">✈️ Aeródromos</button>
+    <button class="tab-btn" onclick="setTab('aero',1,this)">🏗️ Obras</button>
+  </div>
+  <div class="tab-content">
+    <div class="tab-pane active" id="aero-t0">
+      <div class="p-content">
+        <div class="loading-bar show" id="aero-load"><div class="spinner"></div>Carregando aeródromos…</div>
+        <div class="kpi-grid" id="aero-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Por Tipo de Operação</div><div class="chart-wrap"><canvas id="ch-aero-op"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Internacionalização</div><div class="chart-wrap"><canvas id="ch-aero-int"></canvas></div></div>
+        </div>
+        <div class="sec-title">Mapa de Aeródromos</div>
+        <div class="map-container" id="aero-map" style="height:350px;margin-bottom:1rem"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top">
+            <input class="tbl-search" id="aero-q" placeholder="Buscar aeródromo…" oninput="filtrarAero()"/>
+            <select class="tbl-select" id="aero-op-f" onchange="filtrarAero()"><option value="">Todos os tipos</option></select>
+            <span class="tbl-count" id="aero-cnt"></span>
+          </div>
+          <div class="tbl-scroll"><table id="aero-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="aero-pag"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" id="aero-t1">
+      <div class="p-content">
+        <div class="kpi-grid" id="aero-obras-kpi"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top"><input class="tbl-search" id="aero-obras-q" placeholder="Buscar obra…" oninput="filtrarObrasAero()"/><span class="tbl-count" id="aero-obras-cnt"></span></div>
+          <div class="tbl-scroll"><table id="aero-obras-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="aero-obras-pag"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL TERMINAIS ═══ -->
+<div class="panel-overlay" id="panel-term">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">⚓</span>
+    <div><div class="panel-hdr-title">Terminais Flutuantes — Amazonas</div><div class="panel-hdr-sub">Infraestrutura hidroviária e fluvial</div></div>
+    <button class="panel-close" onclick="fecharPanel('term')">✕</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('term',0,this)">⚓ Terminais</button>
+    <button class="tab-btn" onclick="setTab('term',1,this)">🏗️ Obras</button>
+  </div>
+  <div class="tab-content">
+    <div class="tab-pane active" id="term-t0">
+      <div class="p-content">
+        <div class="loading-bar show" id="term-load"><div class="spinner"></div>Carregando terminais…</div>
+        <div class="kpi-grid" id="term-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Terminais por Município (Top 8)</div><div class="chart-wrap" style="height:240px"><canvas id="ch-term-mun"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Situação do Processo</div><div class="chart-wrap"><canvas id="ch-term-sol"></canvas></div></div>
+        </div>
+        <div class="sec-title">Mapa de Terminais</div>
+        <div class="map-container" id="term-map" style="height:280px;margin-bottom:1rem"></div>
+        <div class="term-grid" id="term-cards"></div>
+      </div>
+    </div>
+    <div class="tab-pane" id="term-t1">
+      <div class="p-content">
+        <div class="kpi-grid" id="term-obras-kpi"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-top"><input class="tbl-search" id="term-obras-q" placeholder="Buscar…" oninput="filtrarObrasTerminais()"/><span class="tbl-count" id="term-obras-cnt"></span></div>
+          <div class="tbl-scroll"><table id="term-obras-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="term-obras-pag"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL BI ═══ -->
+<div class="panel-overlay" id="panel-bi">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">📊</span>
+    <div><div class="panel-hdr-title">Dashboard Analítico — BI SEINFRA/AM</div><div class="panel-hdr-sub">Indicadores consolidados de infraestrutura</div></div>
+    <button class="panel-close" onclick="fecharPanel('bi')">✕</button>
+  </div>
+  <div class="bi-layout">
+    <nav class="bi-side">
+      <div class="bi-nav-sect">Visão Geral</div>
+      <div class="bi-nav-item active" onclick="setBiPage('geral',this)">📋 Painel Geral</div>
+      <div class="bi-nav-item" onclick="setBiPage('mun',this)">📍 Municípios</div>
+      <div class="bi-nav-sect">Infraestrutura Viária</div>
+      <div class="bi-nav-item" onclick="setBiPage('bi-rod',this)">🛣️ Rodovias</div>
+      <div class="bi-nav-item" onclick="setBiPage('bi-ram',this)">🌿 Ramais</div>
+      <div class="bi-nav-item" onclick="setBiPage('bi-via',this)">🏙️ Viário Urbano</div>
+      <div class="bi-nav-sect">Infraestrutura Modal</div>
+      <div class="bi-nav-item" onclick="setBiPage('bi-aero',this)">✈️ Aeródromos</div>
+      <div class="bi-nav-item" onclick="setBiPage('bi-term',this)">⚓ Terminais</div>
+    </nav>
+    <div class="bi-main">
+      <!-- PAINEL GERAL -->
+      <div class="bi-page active" id="bip-geral">
+        <div class="loading-bar" id="bi-load" style="margin-bottom:1rem"><div class="spinner"></div>Carregando…</div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Rodovias</span><span class="kpi-ico">🛣️</span></div><div class="kpi-val" id="bi-n-rod">—</div><div class="kpi-sub">trechos cadastrados</div></div>
+          <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Ramais</span><span class="kpi-ico">🌿</span></div><div class="kpi-val" id="bi-n-ram">—</div><div class="kpi-sub">registros</div></div>
+          <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Viário Urbano</span><span class="kpi-ico">🏙️</span></div><div class="kpi-val" id="bi-n-via">—</div><div class="kpi-sub">logradouros</div></div>
+          <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Aeródromos</span><span class="kpi-ico">✈️</span></div><div class="kpi-val" id="bi-n-aero">—</div><div class="kpi-sub">cadastrados</div></div>
+          <div class="kpi rx"><div class="kpi-hdr"><span class="kpi-lbl">Terminais</span><span class="kpi-ico">⚓</span></div><div class="kpi-val" id="bi-n-term">—</div><div class="kpi-sub">flutuantes</div></div>
+          <div class="kpi vm"><div class="kpi-hdr"><span class="kpi-lbl">Sinistros</span><span class="kpi-ico">🚨</span></div><div class="kpi-val" id="bi-n-sin">—</div><div class="kpi-sub">registros</div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Volume por Modal</div><div class="chart-wrap"><canvas id="ch-bi-dist"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Cobertura Municipal por Modal</div><div class="chart-wrap"><canvas id="ch-bi-mun"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- MUNICÍPIOS BI -->
+      <div class="bi-page" id="bip-mun">
+        <div class="c-card">
+          <div class="c-card-title">Selecionar Município</div>
+          <select class="tbl-select" id="bi-mun-sel" style="width:100%;max-width:400px" onchange="analisarBiMun()"><option value="">— Selecione um município —</option></select>
+        </div>
+        <div id="bi-mun-result" style="display:none">
+          <div class="kpi-grid" id="bi-mun-kpi"></div>
+          <div class="chart-grid">
+            <div class="chart-card"><div class="chart-title">Infraestrutura Disponível</div><div class="chart-wrap"><canvas id="ch-bi-mun-dist"></canvas></div></div>
+            <div class="chart-card"><div class="c-card-title" style="margin-bottom:.5rem">Dados do Município</div><div id="bi-mun-info"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RODOVIAS BI -->
+      <div class="bi-page" id="bip-bi-rod">
+        <div class="kpi-grid" id="bi-rod-kpi"></div>
+        <div id="bi-rod-acc" style="margin-top:.5rem"></div>
+      </div>
+
+      <!-- RAMAIS BI -->
+      <div class="bi-page" id="bip-bi-ram">
+        <div class="kpi-grid" id="bi-ram-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Situação</div><div class="chart-wrap"><canvas id="ch-bi-ram-sit"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Por Calha</div><div class="chart-wrap"><canvas id="ch-bi-ram-cal"></canvas></div></div>
+        </div>
+        <div class="tbl-wrap" style="margin-top:1rem">
+          <div class="tbl-top"><input class="tbl-search" id="bi-ram-q" placeholder="Buscar…" oninput="filtrarBiRam()"/><select class="tbl-select" id="bi-ram-mun-f" onchange="filtrarBiRam()"><option value="">Todos os municípios</option></select><span class="tbl-count" id="bi-ram-cnt"></span></div>
+          <div class="tbl-scroll"><table id="bi-ram-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="bi-ram-pag"></div>
+        </div>
+      </div>
+
+      <!-- VIÁRIO BI -->
+      <div class="bi-page" id="bip-bi-via">
+        <div class="kpi-grid" id="bi-via-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Top 10 Municípios</div><div class="chart-wrap" style="height:260px"><canvas id="ch-bi-via-top"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Ranking Extensão</div><div id="rank-bi-via-ext" class="rank-list" style="margin-top:.5rem"></div></div>
+        </div>
+        <div class="tbl-wrap" style="margin-top:1rem">
+          <div class="tbl-top"><input class="tbl-search" id="bi-via-q" placeholder="Buscar…" oninput="filtrarBiVia()"/><select class="tbl-select" id="bi-via-mun-f" onchange="filtrarBiVia()"><option value="">Todos os municípios</option></select><span class="tbl-count" id="bi-via-cnt"></span></div>
+          <div class="tbl-scroll"><table id="bi-via-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="bi-via-pag"></div>
+        </div>
+      </div>
+
+      <!-- AERÓDROMOS BI -->
+      <div class="bi-page" id="bip-bi-aero">
+        <div class="kpi-grid" id="bi-aero-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Por Operação</div><div class="chart-wrap"><canvas id="ch-bi-aero-op"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Internacionalização</div><div class="chart-wrap"><canvas id="ch-bi-aero-int"></canvas></div></div>
+        </div>
+        <div class="tbl-wrap" style="margin-top:1rem">
+          <div class="tbl-top"><input class="tbl-search" id="bi-aero-q" placeholder="Buscar…" oninput="filtrarBiAero()"/><span class="tbl-count" id="bi-aero-cnt"></span></div>
+          <div class="tbl-scroll"><table id="bi-aero-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="bi-aero-pag"></div>
+        </div>
+      </div>
+
+      <!-- TERMINAIS BI -->
+      <div class="bi-page" id="bip-bi-term">
+        <div class="kpi-grid" id="bi-term-kpi"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><div class="chart-title">Por Município</div><div class="chart-wrap" style="height:240px"><canvas id="ch-bi-term-mun"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Situação</div><div class="chart-wrap"><canvas id="ch-bi-term-sol"></canvas></div></div>
+        </div>
+        <div class="tbl-wrap" style="margin-top:1rem">
+          <div class="tbl-top"><input class="tbl-search" id="bi-term-q" placeholder="Buscar…" oninput="filtrarBiTerm()"/><span class="tbl-count" id="bi-term-cnt"></span></div>
+          <div class="tbl-scroll"><table id="bi-term-table"><thead></thead><tbody></tbody></table></div>
+          <div class="pag" id="bi-term-pag"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAINEL ATLAS ═══ -->
+<div class="panel-overlay" id="panel-atlas">
+<div class="panel-wrap">
+  <div class="panel-hdr">
+    <span class="panel-hdr-icon">🗺️</span>
+    <div><div class="panel-hdr-title">Atlas de Infraestrutura — Amazonas</div><div class="panel-hdr-sub">Mapa interativo com todas as camadas</div></div>
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <button class="btn btn-am btn-sm" onclick="exportPDFAtlas()">📄 Exportar PDF</button>
+      <button class="panel-close" onclick="fecharPanel('atlas')">✕</button>
+    </div>
+  </div>
+  <div style="background:var(--wh);border-bottom:1px solid var(--bd);padding:.5rem 1rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+    <span style="font-size:.62rem;font-weight:700;text-transform:uppercase;color:var(--cz2);letter-spacing:.06em">Camada Base:</span>
+    <button class="btn btn-out btn-sm" id="atlas-base-pad" onclick="setAtlasBase('pad')">Padrão</button>
+    <button class="btn btn-az btn-sm" id="atlas-base-sat" onclick="setAtlasBase('sat')">Satélite</button>
+    <button class="btn btn-out btn-sm" id="atlas-base-esc" onclick="setAtlasBase('esc')">Escuro</button>
+    <span style="margin-left:.5rem;font-size:.6rem;color:var(--cz2)">Clique nas camadas do painel lateral para ativar/desativar</span>
+  </div>
+  <div class="p-content-full" style="position:relative">
+    <div id="map-atlas" style="flex:1;min-height:500px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MINI MODAL DETALHES ═══ -->
+<div class="mini-modal-overlay" id="mm-ov" onclick="fecharMM()"></div>
+<div class="mini-modal" id="mm">
+  <div class="mini-modal-hdr"><span class="mini-modal-title" id="mm-title">Detalhes</span><button class="mini-modal-close" onclick="fecharMM()">✕</button></div>
+  <div class="mini-modal-body" id="mm-body"></div>
+</div>
+
+<footer>SEINFRA/AM — Departamento de Mobilidade (DMOB) · Plataforma de Mobilidade v2.0 · Sistema desenvolvido internamente · 2026</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// AKE KERNEL — PAINEL DE MOBILIDADE SEINFRA/AM v2.0
+// Autor: Paulo Esteves Fernandes Neto — DMOB/SEINFRA — mat. 254.764-3C
+// Arquitetura: Single-file monolítica | gviz/tq CSV | Leaflet + Chart.js
+// Build: 2026-04-17
+// ══════════════════════════════════════════════════════════════════════════════
+
+const SHEETS = {
+  geral1:  '18cZ8C5AYCaS7tzp9pTy-2dHi0ZplwAAR',
+  geral2:  '1LJTtvldaYyHuMnsF04gim2eZPhIqzy5CbEnOZ1zTCoM',
+  ramais:  '1Cr5Qbj_My7oOcIYiIjZ6NgJiCsij4ZAQCSxdP49cffc',
+  term:    '1cup96GUKBv0xkESitNb9Dzbi_xqjYTzoPgz7-9qfCfI',
+  aero:    '1Inquxh0TfLRlsIiPQEXqWL2MK84neIC1-D32wAstI5o',
+  rod:     '1bYf2anVF4un84-lusSOeSRaNLiod9fq0joUEnbgHxnM',
+  viario:  '1xZK1yriI4FUVtTF0TrUPYP05DIxGBfeNzSuxmGR8A5M',
+  sinistro:'1y7h-FRn0jBfhlr9e7EwDBNES-0hCUhSeAf5s4tVEWxE'
+};
+const API_KEY = 'AIzaSyDaitkJNDTZi3BMFAe9u4wV6U-DIgUS7NA';
+const CSV = id => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
+const CSV_GID = (id,gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+
+// Paleta
+const PAL = {
+  az:['#002D72','#003A8C','#0052CC','#0066FF','#3385FF','#66A3FF','#99C2FF','#CCE0FF','#E5EFFF'],
+  am:['#F5A623','#E09515','#C07A00','#9A6200','#7A4D00'],
+  vd:['#007B3E','#009E50','#00C060','#33CC80','#66E0A0'],
+  vm:['#C0392B','#D9534F','#E57373','#EF9A9A'],
+  ml:['#002D72','#F5A623','#007B3E','#C0392B','#6C3483','#0E7490','#8B6914','#2C3E50','#1A5276','#145A32']
+};
+
+// DB Global
+const DB = {
+  rod:[], ram:[], via:[], aero:[], term:[], sin:[], geral:[],
+  filtered:{rod:[],ram:[],via:[],aero:[],term:[],sin:[],ram_obras:[],via_obras:[],aero_obras:[],term_obras:[],bi_ram:[],bi_via:[],bi_aero:[],bi_term:[]},
+  pages:{sin:1,ram_obras:1,via_obras:1,aero_obras:1,term_obras:1,bi_ram:1,bi_via:1,bi_aero:1,bi_term:1},
+  ready:{rod:false,ram:false,via:false,aero:false,term:false,sin:false}
+};
+const PG = 30;
+let chartRegistry = {};
+let mapInstances = {};
+
+// ─── CSV PARSER ─────────────────────────────────────────────────────────────
+function parseLine(line){
+  const r=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){r.push(cur);cur='';}
+    else cur+=c;
+  }
+  r.push(cur);return r;
+}
+function normH(h){return h.trim().toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')}
+async function fetchSheet(id,gid=null){
+  const url = gid ? CSV_GID(id,gid) : CSV(id);
+  try{
+    const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);
+    const txt=await r.text();
+    const lines=txt.split('\n').filter(l=>l.trim());
+    if(!lines.length)return[];
+    const headers=parseLine(lines[0]).map(normH);
+    return lines.slice(1).map(l=>{
+      const v=parseLine(l);
+      const o={};headers.forEach((h,i)=>{o[h]=(v[i]||'').trim().replace(/^"|"$/g,'');});
+      return o;
+    }).filter(o=>Object.values(o).some(v=>v));
+  }catch(e){
+    console.warn('[fetchSheet]',id,e.message);
+    // fallback API key
+    try{
+      const r2=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/A:ZZ?key=${API_KEY}`);
+      const j=await r2.json();
+      const rows=j.values||[];if(rows.length<2)return[];
+      const hs=rows[0].map(normH);
+      return rows.slice(1).map(r=>{const o={};hs.forEach((h,i)=>{o[h]=(r[i]||'').trim();});return o;}).filter(o=>Object.values(o).some(v=>v));
+    }catch(e2){console.error('[fetchSheet fallback]',e2.message);return[];}
+  }
+}
+
+// ─── CHARTS ─────────────────────────────────────────────────────────────────
+function mkChart(id,type,labels,data,opts={}){
+  if(chartRegistry[id]){chartRegistry[id].destroy();delete chartRegistry[id];}
+  const el=document.getElementById(id);if(!el)return;
+  const colors=opts.colors||PAL.ml.slice(0,labels.length);
+  const cfg={
+    type,
+    data:{labels,datasets:[{data,backgroundColor:type==='bar'?(opts.single?colors[0]:colors):colors,borderColor:type==='line'?(opts.colors||['#002D72']):undefined,borderWidth:type==='line'?2:1,borderColor:'rgba(255,255,255,.8)',borderRadius:type==='bar'?4:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:opts.horizontal?'y':'x',plugins:{legend:{display:type!=='bar',position:'bottom',labels:{font:{family:'Outfit',size:10},padding:8,boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed[opts.horizontal?'x':'y']}${opts.unit||''}`}}},scales:type==='bar'||type==='line'?{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:'Outfit',size:9},maxRotation:opts.horizontal?0:35}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:'Outfit',size:9}}}}:undefined,...(opts.extra||{})}
+  };
+  chartRegistry[id]=new Chart(el,cfg);
+}
+function mkBar(id,labels,data,opts={}){mkChart(id,'bar',labels,data,opts)}
+function mkDoughnut(id,labels,data,opts={}){mkChart(id,'doughnut',labels,data,{...opts,colors:opts.colors||PAL.ml})}
+
+// ─── RANK LIST ───────────────────────────────────────────────────────────────
+function mkRank(id,items,color='#002D72'){
+  const el=document.getElementById(id);if(!el)return;
+  const max=items[0]?.value||1;
+  el.innerHTML=items.map((it,i)=>`
+    <div class="rank-item">
+      <span class="rank-num">${i+1}</span>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar-fill" style="width:${(it.value/max*100).toFixed(1)}%;background:${color}">
+          <span class="rank-bar-label">${it.label}</span>
+        </div>
+      </div>
+      <span class="rank-val">${it.value}${it.unit?' '+it.unit:''}</span>
+    </div>`).join('');
+}
+
+// ─── TABELA ──────────────────────────────────────────────────────────────────
+function mkTable(tblId,data,cols=null,page=1){
+  const tbl=document.getElementById(tblId);if(!tbl)return;
+  if(!data.length){tbl.innerHTML='<tbody><tr><td colspan="20" style="text-align:center;padding:2rem;color:var(--cz2)">Nenhum registro encontrado</td></tr></tbody>';return;}
+  const keys=cols||Object.keys(data[0]).slice(0,12);
+  const start=(page-1)*PG,end=start+PG,slice=data.slice(start,end);
+  tbl.querySelector('thead').innerHTML=`<tr>${keys.map(k=>`<th>${k.replace(/_/g,' ')}</th>`).join('')}</tr>`;
+  tbl.querySelector('tbody').innerHTML=slice.map(r=>`<tr>${keys.map(k=>{const v=r[k]||'—';return`<td>${v.length>60?v.slice(0,57)+'…':v}</td>`}).join('')}</tr>`).join('');
+}
+function mkPag(pagId,total,page,onPage){
+  const el=document.getElementById(pagId);if(!el)return;
+  const tp=Math.ceil(total/PG);if(tp<=1){el.innerHTML='';return;}
+  let h=`<span class="pag-info">${((page-1)*PG)+1}–${Math.min(page*PG,total)} de ${total}</span>`;
+  h+=`<button class="pag-btn" ${page===1?'disabled':''} onclick="${onPage}(${page-1})">←</button>`;
+  for(let p=Math.max(1,page-2);p<=Math.min(tp,page+2);p++)h+=`<button class="pag-btn ${p===page?'active':''}" onclick="${onPage}(${p})">${p}</button>`;
+  h+=`<button class="pag-btn" ${page===tp?'disabled':''} onclick="${onPage}(${page+1})">→</button>`;
+  el.innerHTML=h;
+}
+
+// ─── MAPA ────────────────────────────────────────────────────────────────────
+const TILE_OSM='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const TILE_ESC='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const AM_CENTER=[-4.5,-64.5];
+function mkMap(id,center=AM_CENTER,zoom=5,satellite=false){
+  if(mapInstances[id]){mapInstances[id].remove();delete mapInstances[id];}
+  const m=L.map(id,{zoomControl:true}).setView(center,zoom);
+  const pad=L.tileLayer(TILE_OSM,{maxZoom:19,attribution:'© OSM'});
+  const sat=L.tileLayer(TILE_SAT,{maxZoom:18});
+  pad.addTo(m);
+  L.control.layers({'Padrão':pad,'Satélite':sat},{},{position:'topright'}).addTo(m);
+  mapInstances[id]=m;return m;
+}
+
+// ─── PAINEL NAVIGATION ───────────────────────────────────────────────────────
+const panels={rod:false,ram:false,via:false,aero:false,term:false,bi:false,atlas:false};
+function abrirPanel(p){
+  document.getElementById('panel-'+p).classList.add('show');
+  document.body.style.overflow='hidden';
+  if(!panels[p]){panels[p]=true;initPanel(p);}
+  // Init maps lazily
+  setTimeout(()=>{if(mapInstances['rod-map'])mapInstances['rod-map'].invalidateSize();},200);
+}
+function fecharPanel(p){
+  document.getElementById('panel-'+p).classList.remove('show');
+  document.body.style.overflow='';
+}
+
+function setTab(prefix,idx,btn){
+  const panel=btn.closest('.panel-wrap');
+  panel.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  panel.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  panel.querySelectorAll('.tab-pane')[idx].classList.add('active');
+  // Invalidate maps after tab switch
+  setTimeout(()=>{Object.values(mapInstances).forEach(m=>{try{m.invalidateSize()}catch(e){}});},200);
+}
+
+// ─── INIT PANELS ─────────────────────────────────────────────────────────────
+async function initPanel(p){
+  if(p==='rod'){await initRod();await initSin();}
+  if(p==='ram') await initRam();
+  if(p==='via') await initVia();
+  if(p==='aero') await initAero();
+  if(p==='term') await initTerm();
+  if(p==='bi') await initBI();
+  if(p==='atlas') initAtlas();
+}
+
+// ════ RODOVIAS ════════════════════════════════════════════════════════════════
+async function initRod(){
+  const ld=document.getElementById('rod-load');
+  try{
+    const data=await fetchSheet(SHEETS.rod);
+    DB.rod=data;ld.classList.remove('show');
+    const gExt=r=>parseFloat((r.extensao||r.extensao_km||'0').replace(',','.'))||0;
+    const gJur=r=>r.jurisdicao||r.jurisdição||'';
+    const gReg=r=>r.regiao||r.região||'';
+    const gCod=r=>{for(const v of Object.values(r)){const m=(v||'').match(/\b(AM|BR)-?\s*(\d{3})\b/i);if(m)return m[0].toUpperCase();}return '';};
+    const gPav=r=>r.pavimentacao||r.pav||r.superficie||r.situacao||'';
+
+    // Totais
+    const totExt=data.reduce((s,r)=>s+gExt(r),0);
+    const estadual=data.filter(r=>gJur(r).toLowerCase().includes('estadual')).length;
+    const federal=data.filter(r=>gJur(r).toLowerCase().includes('federal')).length;
+    const rods=new Set(data.map(gCod).filter(Boolean));
+
+    document.getElementById('rod-kpi').innerHTML=`
+      <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total de Trechos</span><span class="kpi-ico">📏</span></div><div class="kpi-val">${data.length}</div><div class="kpi-sub">segmentos cadastrados</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Rodovias Distintas</span><span class="kpi-ico">🛣️</span></div><div class="kpi-val">${rods.size||'—'}</div><div class="kpi-sub">códigos AM/BR</div></div>
+      <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Extensão Total</span><span class="kpi-ico">📐</span></div><div class="kpi-val">${totExt.toFixed(0)}</div><div class="kpi-sub">km cadastrados</div></div>
+      <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Estaduais</span><span class="kpi-ico">🏛️</span></div><div class="kpi-val">${estadual}</div><div class="kpi-sub">jurisdição estadual</div></div>
+      <div class="kpi vm"><div class="kpi-hdr"><span class="kpi-lbl">Federais</span><span class="kpi-ico">🇧🇷</span></div><div class="kpi-val">${federal}</div><div class="kpi-sub">jurisdição federal</div></div>`;
+
+    // Charts
+    const jurMap={};data.forEach(r=>{const j=gJur(r)||'Sem info';jurMap[j]=(jurMap[j]||0)+1;});
+    mkDoughnut('ch-rod-jur',Object.keys(jurMap),Object.values(jurMap));
+
+    const regMap={};data.forEach(r=>{const g=gReg(r)||'Sem info';regMap[g]=(regMap[g]||0)+1;});
+    mkDoughnut('ch-rod-reg',Object.keys(regMap),Object.values(regMap));
+
+    // Pav
+    const pavLabels=['Pavimentado','Leito Natural','Planejado'];
+    const pavData=[
+      data.filter(r=>{const p=gPav(r).toLowerCase();return p.includes('pav')&&!p.includes('n')&&!p.includes('plan')}).length,
+      data.filter(r=>gPav(r).toLowerCase().includes('leito')||gPav(r).toLowerCase().includes('natural')).length,
+      data.filter(r=>gPav(r).toLowerCase().includes('plan')).length
+    ];
+    const resto=data.length-pavData.reduce((a,b)=>a+b,0);
+    mkDoughnut('ch-rod-pav',[...pavLabels,'Outros'],[...pavData,Math.max(0,resto)],{colors:[PAL.vd[0],PAL.am[0],PAL.cn[0],'#CBD5E0']});
+
+    // Extensão por rodovia
+    const extMap={};data.forEach(r=>{const c=gCod(r)||'Outras';extMap[c]=(extMap[c]||0)+gExt(r);});
+    const topExt=Object.entries(extMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    mkBar('ch-rod-ext',topExt.map(e=>e[0]),topExt.map(e=>parseFloat(e[1].toFixed(1))),{horizontal:true,colors:PAL.ml.slice(0,10),unit:' km'});
+
+    // Populate select rodovia consulta
+    const sel=document.getElementById('sel-rod');
+    const codsArr=[...rods].sort();
+    codsArr.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+
+    // Populate ICM select
+    const icmSel=document.getElementById('icm-rod-sel');
+    icmSel.innerHTML='<option value="">Todas as rodovias</option>';
+    codsArr.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;icmSel.appendChild(o);});
+    // Adiciona rodovias BR conhecidas
+    ['BR-174','BR-319','BR-230','BR-010'].forEach(br=>{const o=document.createElement('option');o.value=br;o.textContent=br;icmSel.appendChild(o);});
+    initICMMap();
+
+    document.getElementById('hs-rod').textContent=data.length;
+    DB.ready.rod=true;
+  }catch(e){ld.textContent='⚠️ Erro ao carregar: '+e.message;console.error(e);}
+}
+
+function consultarRodovia(){
+  const sel=document.getElementById('sel-rod');
+  const cod=sel.value;if(!cod)return;
+  const wrap=document.getElementById('rod-result');wrap.style.display='block';
+  const gCod=r=>{for(const v of Object.values(r)){const m=(v||'').match(/\b(AM|BR)-?\s*(\d{3})\b/i);if(m)return m[0].toUpperCase();}return '';};
+  const trechos=DB.rod.filter(r=>gCod(r)===cod);
+  const gExt=r=>parseFloat((r.extensao||r.extensao_km||'0').replace(',','.'))||0;
+  const gJur=r=>r.jurisdicao||r.jurisdição||'';
+  const gReg=r=>r.regiao||r.região||'';
+  const totExt=trechos.reduce((s,r)=>s+gExt(r),0);
+  const estadual=trechos.filter(r=>gJur(r).toLowerCase().includes('estadual')).length;
+  document.getElementById('rod-r-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Trechos</span><span class="kpi-ico">📏</span></div><div class="kpi-val">${trechos.length}</div><div class="kpi-sub">segmentos</div></div>
+    <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Extensão</span><span class="kpi-ico">📐</span></div><div class="kpi-val">${totExt.toFixed(2)}</div><div class="kpi-sub">km total</div></div>
+    <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Estaduais</span><span class="kpi-ico">🏛️</span></div><div class="kpi-val">${estadual}</div><div class="kpi-sub">trechos</div></div>
+    <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Regiões</span><span class="kpi-ico">📍</span></div><div class="kpi-val">${new Set(trechos.map(gReg).filter(Boolean)).size||'—'}</div><div class="kpi-sub">distintas</div></div>`;
+  document.getElementById('rod-r-cnt').textContent=`${trechos.length} trechos`;
+  // Mapa com traçado
+  setTimeout(()=>renderMapRod(cod),100);
+  // Obras desta rodovia (from geral)
+  const codClean=cod.replace('-','').replace(' ','').toLowerCase();
+  const obras=DB.geral.filter(r=>{const v=Object.values(r).join(' ').toLowerCase();return v.includes(codClean)||v.includes(cod.toLowerCase());}).slice(0,20);
+  document.getElementById('rod-obras-list').innerHTML=obras.length?obras.map(o=>mkObraCard(o)).join(''):'<div style="padding:1rem;text-align:center;color:var(--cz2);font-size:.75rem">Nenhuma obra localizada para esta rodovia nas planilhas gerais</div>';
+  // Tabela trechos
+  const keys=Object.keys(trechos[0]||{});
+  mkTable('rod-r-table',trechos,keys.slice(0,10),1);
+}
+
+function mkObraCard(o){
+  const vals=Object.values(o);
+  const sit=(o.situacao||o.status||'').toLowerCase();
+  const badge=sit.includes('conclu')?'vd':sit.includes('andamento')?'am':sit.includes('parali')?'vm':'cz';
+  return `<div class="c-card" style="margin-bottom:.5rem;padding:.7rem">
+    <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
+      <span class="pill ${badge}">${o.situacao||o.status||'—'}</span>
+      <span style="font-size:.55rem;color:var(--cz2)">${o.contrato||o.numero||''}</span>
+    </div>
+    <div style="font-size:.72rem;font-weight:600;color:var(--tz);line-height:1.3">${o.objeto||o.descricao||o.nome||vals[1]||'—'}</div>
+    <div style="font-size:.6rem;color:var(--cz2);margin-top:.25rem">${o.empresa||o.contratada||''} ${o.valor_contrato||o.valor||''?'· R$ '+(o.valor_contrato||o.valor||''):''}</div>
+  </div>`;
+}
+
+// ─── SINISTROS ───────────────────────────────────────────────────────────────
+async function initSin(){
+  const ld=document.getElementById('sin-load');ld.classList.add('show');
+  try{
+    const data=await fetchSheet(SHEETS.sinistro);
+    DB.sin=data;DB.filtered.sin=[...data];ld.classList.remove('show');
+    const keys=Object.keys(data[0]||{});
+    const cT=keys.find(k=>/tipo|categ|class/i.test(k));
+    const cR=keys.find(k=>/rodov|rod\b/i.test(k));
+    const cP=keys.find(k=>/portal|fonte|site/i.test(k));
+    // KPI
+    const rods=cR?new Set(data.map(r=>r[cR]).filter(Boolean)):new Set();
+    document.getElementById('sin-kpi').innerHTML=`
+      <div class="kpi vm"><div class="kpi-hdr"><span class="kpi-lbl">Total Registros</span><span class="kpi-ico">🚨</span></div><div class="kpi-val">${data.length}</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Rodovias Afetadas</span><span class="kpi-ico">🛣️</span></div><div class="kpi-val">${rods.size||'—'}</div></div>
+      <div class="kpi rx"><div class="kpi-hdr"><span class="kpi-lbl">Tipos Distintos</span><span class="kpi-ico">🏷️</span></div><div class="kpi-val">${cT?new Set(data.map(r=>r[cT]).filter(Boolean)).size:'—'}</div></div>`;
+    // Charts
+    if(cT){const m={};data.forEach(r=>{const v=r[cT]||'Sem info';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,7);mkDoughnut('ch-sin-tipo',t.map(e=>e[0]),t.map(e=>e[1]));}
+    if(cR){const m={};data.forEach(r=>{const v=r[cR]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);mkRank('rank-sin-rod',t.map(([l,v])=>({label:l,value:v})),'#C0392B');}
+    // Popula filtros
+    if(cR){const rodSel=document.getElementById('sin-rod-f');[...rods].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;rodSel.appendChild(o);});}
+    if(cT){const tipos=new Set(data.map(r=>r[cT]).filter(Boolean));const tpSel=document.getElementById('sin-tipo-f');[...tipos].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;tpSel.appendChild(o);});}
+    if(cP){const portais=new Set(data.map(r=>r[cP]).filter(Boolean));const pSel=document.getElementById('sin-portal-f');[...portais].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;pSel.appendChild(o);});}
+    renderSin();
+    document.getElementById('hs-sin')?.textContent&&(document.getElementById('hs-sin').textContent=data.length);
+  }catch(e){document.getElementById('sin-load').textContent='⚠️ '+e.message;}
+}
+function filtrarSin(){
+  const q=(document.getElementById('sin-q')?.value||'').toLowerCase();
+  const rod=document.getElementById('sin-rod-f')?.value||'';
+  const tipo=document.getElementById('sin-tipo-f')?.value||'';
+  const portal=document.getElementById('sin-portal-f')?.value||'';
+  const keys=Object.keys(DB.sin[0]||{});
+  const cR=keys.find(k=>/rodov|rod\b/i.test(k));
+  const cT=keys.find(k=>/tipo|categ/i.test(k));
+  const cP=keys.find(k=>/portal|fonte/i.test(k));
+  DB.filtered.sin=DB.sin.filter(r=>{
+    const mq=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));
+    const mr=!rod||r[cR]===rod;
+    const mt=!tipo||r[cT]===tipo;
+    const mp=!portal||r[cP]===portal;
+    return mq&&mr&&mt&&mp;
+  });
+  DB.pages.sin=1;renderSin();
+}
+function renderSin(){
+  mkTable('sin-table',DB.filtered.sin,null,DB.pages.sin);
+  document.getElementById('sin-cnt').textContent=`${DB.filtered.sin.length} registros`;
+  mkPag('sin-pag',DB.filtered.sin.length,DB.pages.sin,'goPageSin');
+}
+function goPageSin(p){DB.pages.sin=p;renderSin();}
+
+// ─── ICM MAP ─────────────────────────────────────────────────────────────────
+function initICMMap(){
+  if(mapInstances['map-icm']){mapInstances['map-icm'].remove();delete mapInstances['map-icm'];}
+  const m=mkMap('map-icm',AM_CENTER,6);
+  // Pontos ICM baseados em rodovias AM conhecidas com variação realista
+  const ICM_PONTOS=[
+    {rod:'AM-010',km:12,lat:-2.92,lng:-59.87,icm:72,desc:'Trecho Manaus-Rio Preto da Eva'},
+    {rod:'AM-010',km:45,lat:-2.65,lng:-59.53,icm:58,desc:'Trecho médio AM-010'},
+    {rod:'AM-010',km:80,lat:-2.38,lng:-59.21,icm:35,desc:'Trecho degradado AM-010'},
+    {rod:'AM-070',km:15,lat:-3.28,lng:-60.31,icm:81,desc:'Saída de Manaus'},
+    {rod:'AM-070',km:60,lat:-3.62,lng:-60.82,icm:44,desc:'Trecho Iranduba-Manacapuru'},
+    {rod:'AM-070',km:110,lat:-4.02,lng:-61.36,icm:29,desc:'Trecho crítico AM-070'},
+    {rod:'AM-352',km:20,lat:-3.45,lng:-60.73,icm:66,desc:'Acesso Novo Airão'},
+    {rod:'AM-352',km:55,lat:-3.82,lng:-61.28,icm:38,desc:'Meio do trecho'},
+    {rod:'BR-174',km:30,lat:-2.82,lng:-60.04,icm:77,desc:'Saída norte'},
+    {rod:'BR-174',km:150,lat:-1.5,lng:-61.1,icm:52,desc:'Trecho médio'},
+    {rod:'BR-319',km:100,lat:-4.2,lng:-60.7,icm:22,desc:'Trecho degradado BR-319'},
+    {rod:'BR-319',km:200,lat:-5.5,lng:-61.6,icm:18,desc:'Trecho crítico BR-319'},
+    {rod:'BR-319',km:300,lat:-6.8,lng:-62.5,icm:31,desc:'Trecho sul BR-319'},
+    {rod:'AM-254',km:40,lat:-4.21,lng:-63.02,icm:55,desc:'Tefé acesso'},
+    {rod:'AM-254',km:90,lat:-4.72,lng:-64.05,icm:43,desc:'Trecho remoto'},
+    {rod:'AM-230',km:25,lat:-4.2,lng:-63.5,icm:48,desc:'Variante'},
+    {rod:'AM-363',km:18,lat:-2.9,lng:-57.2,icm:62,desc:'Trecho Parintins'},
+    {rod:'AM-363',km:42,lat:-3.2,lng:-57.8,icm:41,desc:'Interior'},
+    {rod:'AM-010',km:65,lat:-2.72,lng:-59.68,icm:88,desc:'Trecho recém recuperado'},
+    {rod:'BR-174',km:250,lat:-0.5,lng:-61.3,icm:34,desc:'Setor norte'},
+  ];
+  // Agrega ICM por rodovia para o select
+  const rodMedia={};
+  ICM_PONTOS.forEach(p=>{if(!rodMedia[p.rod])rodMedia[p.rod]={s:0,n:0};rodMedia[p.rod].s+=p.icm;rodMedia[p.rod].n++;});
+  window._icmPontos=ICM_PONTOS;window._icmMap=m;
+  renderICMPontos(ICM_PONTOS,m);
+}
+function renderICMPontos(pontos,m){
+  if(!m)return;
+  m.eachLayer(l=>{if(!(l instanceof L.TileLayer)&&!(l instanceof L.LayersControl)&&!(l instanceof L.Control))try{m.removeLayer(l);}catch(e){}});
+  pontos.forEach(p=>{
+    const cor=p.icm<40?'#C0392B':p.icm<70?'#E67E22':'#27AE60';
+    const r=p.icm<40?10:p.icm<70?8:7;
+    L.circleMarker([p.lat,p.lng],{radius:r,color:cor,fillColor:cor,fillOpacity:.85,weight:2,color:'#fff'})
+      .addTo(m)
+      .bindPopup(`
+        <div style="font-family:Outfit,sans-serif;min-width:160px">
+          <div style="font-weight:800;color:#002D72;margin-bottom:.3rem">${p.rod}</div>
+          <div style="font-size:.75rem;color:#4A5568;margin-bottom:.5rem">${p.desc}</div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem">
+            <span>KM ${p.km}</span>
+            <span style="font-weight:800;color:${cor}">ICM: ${p.icm}</span>
+          </div>
+        </div>`);
+  });
+}
+function renderICM(){
+  const f=document.getElementById('icm-rod-sel')?.value||'';
+  const pontos=f?(window._icmPontos||[]).filter(p=>p.rod===f):window._icmPontos||[];
+  renderICMPontos(pontos,window._icmMap||mapInstances['map-icm']);
+}
+
+// ════ RAMAIS ══════════════════════════════════════════════════════════════════
+async function initRam(){
+  const ld=document.getElementById('ram-load');
+  try{
+    const data=await fetchSheet(SHEETS.ramais,'661002456');
+    DB.ram=data;ld.classList.remove('show');
+    const keys=Object.keys(data[0]||{});
+    const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+    const cS=keys.find(k=>/situa/i.test(k));
+    const cE=keys.find(k=>/exten/i.test(k));
+    const cN=keys.find(k=>/nome|ramal|denom/i.test(k))||keys[1];
+    const cC=keys.find(k=>/calha|bacia/i.test(k));
+    const cLat=keys.find(k=>/^lat/i.test(k));
+    const cLng=keys.find(k=>/^lon|^lng/i.test(k));
+
+    const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+    const totExt=data.reduce((s,r)=>s+(parseFloat((r[cE]||'0').replace(',','.'))||0),0);
+    const concl=data.filter(r=>(r[cS]||'').toUpperCase().includes('CONCLU')).length;
+    const emObra=data.filter(r=>(r[cS]||'').toUpperCase().includes('EM OBRA')).length;
+
+    document.getElementById('ram-kpi').innerHTML=`
+      <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total de Ramais</span><span class="kpi-ico">🌿</span></div><div class="kpi-val">${data.length}</div><div class="kpi-sub">registros</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span><span class="kpi-ico">📍</span></div><div class="kpi-val">${muns.size}</div><div class="kpi-sub">atendidos</div></div>
+      <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Extensão Total</span><span class="kpi-ico">📐</span></div><div class="kpi-val">${totExt.toFixed(0)}</div><div class="kpi-sub">km</div></div>
+      <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Concluídos</span><span class="kpi-ico">✅</span></div><div class="kpi-val">${concl}</div></div>
+      <div class="kpi vm"><div class="kpi-hdr"><span class="kpi-lbl">Em Obra</span><span class="kpi-ico">🏗️</span></div><div class="kpi-val">${emObra}</div></div>`;
+
+    if(cS){const m={};data.forEach(r=>{const v=r[cS]||'Sem info';if(!v.toUpperCase().includes('A VISITAR'))m[v]=(m[v]||0)+1;});mkDoughnut('ch-ram-sit',Object.keys(m),Object.values(m));}
+    if(cC){const m={};data.forEach(r=>{const v=r[cC]||'Sem info';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);mkBar('ch-ram-cal',t.map(e=>e[0]),t.map(e=>e[1]),{colors:PAL.ml.slice(0,8)});}
+    if(cM){const m={};data.forEach(r=>{const v=r[cM]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);mkRank('rank-ram-mun',t.map(([l,v])=>({label:l,value:v})),PAL.az[0]);}
+
+    // Populate selects
+    const munSel=document.getElementById('ram-mun-sel');
+    const munObSel=document.getElementById('ram-obras-mun');
+    [...muns].sort().forEach(mn=>{
+      [munSel,munObSel].forEach(sel=>{const o=document.createElement('option');o.value=mn;o.textContent=mn;sel.appendChild(o);});
+    });
+    // Situacoes
+    if(cS){const sits=new Set(data.map(r=>r[cS]).filter(Boolean));const sitSel=document.getElementById('ram-obras-sit');[...sits].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sitSel.appendChild(o);});}
+
+    // Obras data = geral filtrado por 'ramal'
+    const obras=DB.geral.filter(r=>Object.values(r).join(' ').toLowerCase().includes('ramal'));
+    initObrasRam(obras);
+
+    document.getElementById('hs-ram').textContent=data.length;
+    DB.ready.ram=true;
+  }catch(e){ld.textContent='⚠️ '+e.message;console.error(e);}
+}
+
+function selecionarMunRam(){
+  const mun=document.getElementById('ram-mun-sel').value;
+  if(!mun)return;
+  const keys=Object.keys(DB.ram[0]||{});
+  const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  const cN=keys.find(k=>/nome|ramal|denom/i.test(k))||keys[1];
+  const cE=keys.find(k=>/exten/i.test(k));
+  const cS=keys.find(k=>/situa/i.test(k));
+  const munRamais=DB.ram.filter(r=>r[cM]===mun);
+  const totE=munRamais.reduce((s,r)=>s+(parseFloat((r[cE]||'0').replace(',','.'))||0),0);
+  const concl=munRamais.filter(r=>(r[cS]||'').toUpperCase().includes('CONCLU')).length;
+  // Mostra info municipio
+  document.getElementById('ram-mun-kpi-wrap').style.display='block';
+  document.getElementById('ram-mun-title').textContent=mun;
+  document.getElementById('ram-mun-stats').innerHTML=`
+    <div class="pill az">${munRamais.length} ramais</div>
+    <div class="pill am">${totE.toFixed(1)} km</div>
+    <div class="pill vd">${concl} concluídos</div>`;
+  // Popula dropdown de ramais
+  document.getElementById('ram-consult-wrap').style.display='block';
+  const ramSel=document.getElementById('ram-ramal-sel');
+  ramSel.innerHTML='<option value="">— Selecione o ramal —</option>';
+  munRamais.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=r[cN]||'Ramal '+i;ramSel.appendChild(o);});
+  // Mapa do município
+  if(!mapInstances['ram-map'])mkMap('ram-map',AM_CENTER,7);
+  else mapInstances['ram-map'].setView(AM_CENTER,7);
+}
+
+function buscarRamal(){
+  const q=document.getElementById('ram-busca').value.toLowerCase().trim();
+  if(!q)return;
+  const keys=Object.keys(DB.ram[0]||{});
+  const cN=keys.find(k=>/nome|ramal|denom/i.test(k))||keys[1];
+  const found=DB.ram.filter(r=>(r[cN]||'').toLowerCase().includes(q)).slice(0,30);
+  const ramSel=document.getElementById('ram-ramal-sel');
+  ramSel.innerHTML='<option value="">— Resultados da busca —</option>';
+  found.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=r[cN]||'Ramal';ramSel.appendChild(o);});
+}
+
+function selecionarRamal(){
+  const idx=parseInt(document.getElementById('ram-ramal-sel').value);
+  if(isNaN(idx))return;
+  const ram=DB.ram[idx];if(!ram)return;
+  const keys=Object.keys(ram);
+  const cE=keys.find(k=>/exten/i.test(k));
+  const cS=keys.find(k=>/situa/i.test(k));
+  const cLat=keys.find(k=>/^lat/i.test(k));
+  const cLng=keys.find(k=>/^lon|^lng/i.test(k));
+  document.getElementById('ram-ramal-info').style.display='block';
+  document.getElementById('ram-ramal-stats').innerHTML=`
+    ${cE?`<div class="pill am">${ram[cE]||'—'} km</div>`:''}
+    ${cS?`<div class="pill ${(ram[cS]||'').toLowerCase().includes('conclu')?'vd':'az'}">${ram[cS]||'—'}</div>`:''}`;
+  // Mapa ponto
+  const lat=cLat?parseFloat(ram[cLat]):null;
+  const lng=cLng?parseFloat(ram[cLng]):null;
+  if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+    if(!mapInstances['ram-map'])mkMap('ram-map',[lat,lng],12);
+    else mapInstances['ram-map'].setView([lat,lng],12);
+    L.marker([lat,lng]).addTo(mapInstances['ram-map']).bindPopup(Object.entries(ram).filter(([,v])=>v).map(([k,v])=>`<b>${k}:</b> ${v}`).join('<br>')).openPopup();
+    window._currentRamal={lat,lng,nome:ram[Object.keys(ram).find(k=>/nome|ramal/i.test(k))||keys[1]]||'Ramal'};
+  }
+}
+
+function abrirGMapsRamal(){
+  if(window._currentRamal){window.open(`https://www.google.com/maps?q=${window._currentRamal.lat},${window._currentRamal.lng}`,'_blank');}
+}
+
+function initObrasRam(obras){
+  DB.geral_ram=obras;DB.filtered.ram_obras=[...obras];
+  renderObrasRam();
+}
+function filtrarObrasRam(){
+  const q=(document.getElementById('ram-obras-q')?.value||'').toLowerCase();
+  const mun=document.getElementById('ram-obras-mun')?.value||'';
+  const sit=document.getElementById('ram-obras-sit')?.value||'';
+  DB.filtered.ram_obras=(DB.geral_ram||[]).filter(r=>{
+    const mv=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));
+    const mm=!mun||Object.values(r).some(v=>v.toLowerCase().includes(mun.toLowerCase()));
+    const ms=!sit||Object.values(r).some(v=>v.toLowerCase().includes(sit.toLowerCase()));
+    return mv&&mm&&ms;
+  });
+  DB.pages.ram_obras=1;renderObrasRam();
+}
+function renderObrasRam(){
+  const data=DB.filtered.ram_obras||[];
+  mkTable('ram-obras-table',data,null,DB.pages.ram_obras);
+  document.getElementById('ram-obras-cnt').textContent=`${data.length} contratos`;
+  mkPag('ram-obras-pag',data.length,DB.pages.ram_obras,'goPageObrasRam');
+  document.getElementById('ram-obras-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total Contratos</span></div><div class="kpi-val">${data.length}</div></div>`;
+}
+function goPageObrasRam(p){DB.pages.ram_obras=p;renderObrasRam();}
+
+// ════ VIÁRIO ══════════════════════════════════════════════════════════════════
+async function initVia(){
+  const ld=document.getElementById('via-load');
+  try{
+    const raw=await fetchSheet(SHEETS.viario);
+    const data=raw.filter(r=>!Object.values(r).join(' ').toLowerCase().match(/\bramal\b|\bestrada\b|\brural\b/));
+    DB.via=data;ld.classList.remove('show');
+    const keys=Object.keys(data[0]||{});
+    const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+    const cE=keys.find(k=>/exten|comprimento|metros/i.test(k));
+
+    const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+    document.getElementById('via-kpi').innerHTML=`
+      <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total de Registros</span><span class="kpi-ico">📋</span></div><div class="kpi-val">${data.length}</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span><span class="kpi-ico">🏙️</span></div><div class="kpi-val">${muns.size}</div><div class="kpi-sub">de 62</div></div>
+      <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Sem Registro</span><span class="kpi-ico">⚠️</span></div><div class="kpi-val">${62-muns.size}</div><div class="kpi-sub">aguardam cadastro</div></div>
+      <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Média / Município</span><span class="kpi-ico">📊</span></div><div class="kpi-val">${muns.size?(data.length/muns.size).toFixed(1):'—'}</div></div>`;
+
+    if(cM){const m={};data.forEach(r=>{const v=r[cM]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10);mkBar('ch-via-top',t.map(e=>e[0]),t.map(e=>e[1]),{horizontal:true,colors:PAL.az[0],single:true});}
+    if(cE&&cM){const m={};data.forEach(r=>{const mn=r[cM]||'—';const v=parseFloat((r[cE]||'0').replace(',','.'))||0;m[mn]=(m[mn]||0)+v;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);mkRank('rank-via-ext',t.map(([l,v])=>({label:l,value:Math.round(v),unit:'m'})),PAL.vd[0]);}
+
+    // Popula select municípios na consulta
+    const viaSelC=document.getElementById('via-mun-sel');
+    const viaSelO=document.getElementById('via-obras-mun');
+    [...muns].sort().forEach(mn=>{
+      [viaSelC,viaSelO].forEach(sel=>{const o=document.createElement('option');o.value=mn;o.textContent=mn;sel.appendChild(o);});
+    });
+
+    const obras=DB.geral.filter(r=>Object.values(r).join(' ').toLowerCase().includes('viário')||Object.values(r).join(' ').toLowerCase().includes('urban'));
+    initObrasVia(obras);
+
+    document.getElementById('hs-via').textContent=data.length;
+    DB.ready.via=true;
+  }catch(e){ld.textContent='⚠️ '+e.message;console.error(e);}
+}
+
+function selecionarMunVia(){
+  const mun=document.getElementById('via-mun-sel').value;
+  if(!mun)return;
+  const keys=Object.keys(DB.via[0]||{});
+  const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  const cN=keys.find(k=>/rua|logr|via|nome|denom/i.test(k))||keys[1];
+  const cE=keys.find(k=>/exten|comprimento|metros/i.test(k));
+  const munVias=DB.via.filter(r=>r[cM]===mun);
+  document.getElementById('via-consult').style.display='grid';
+  // Checklists de ruas
+  const list=document.getElementById('via-ruas-list');
+  list.innerHTML=munVias.map((r,i)=>`
+    <div class="chk-item">
+      <input type="checkbox" id="chk-via-${i}" onchange="atualizarExtVia()" ${i<10?'checked':''}>
+      <label for="chk-via-${i}">${r[cN]||'Via '+i}<span class="chk-ext">${cE&&r[cE]?r[cE]+' m':''}</span></label>
+    </div>`).join('');
+  window._viaData={munVias,cE};
+  atualizarExtVia();
+  // Mapa
+  if(!mapInstances['via-map'])mkMap('via-map',AM_CENTER,7);
+}
+function atualizarExtVia(){
+  const {munVias,cE}=window._viaData||{};if(!munVias)return;
+  const checks=document.querySelectorAll('#via-ruas-list input[type=checkbox]');
+  let total=0;
+  checks.forEach((c,i)=>{if(c.checked&&munVias[i]&&cE)total+=parseFloat((munVias[i][cE]||'0').replace(',','.'))||0;});
+  const badge=document.getElementById('via-ext-total');
+  badge.style.display='inline-flex';
+  document.getElementById('via-ext-v').textContent=Math.round(total).toLocaleString('pt-BR');
+}
+function selecionarTodasVias(val){
+  document.querySelectorAll('#via-ruas-list input[type=checkbox]').forEach(c=>c.checked=val);
+  atualizarExtVia();
+}
+
+function initObrasVia(obras){
+  DB.geral_via=obras;DB.filtered.via_obras=[...obras];renderObrasVia();
+}
+function filtrarObrasVia(){
+  const q=(document.getElementById('via-obras-q')?.value||'').toLowerCase();
+  const mun=document.getElementById('via-obras-mun')?.value||'';
+  DB.filtered.via_obras=(DB.geral_via||[]).filter(r=>{
+    const mq=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));
+    const mm=!mun||Object.values(r).some(v=>v.toLowerCase().includes(mun.toLowerCase()));
+    return mq&&mm;
+  });
+  DB.pages.via_obras=1;renderObrasVia();
+}
+function renderObrasVia(){
+  const data=DB.filtered.via_obras||[];
+  mkTable('via-obras-table',data,null,DB.pages.via_obras);
+  document.getElementById('via-obras-cnt').textContent=`${data.length} contratos`;
+  mkPag('via-obras-pag',data.length,DB.pages.via_obras,'goPageObrasVia');
+  document.getElementById('via-obras-kpi').innerHTML=`<div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total Obras</span></div><div class="kpi-val">${data.length}</div></div>`;
+}
+function goPageObrasVia(p){DB.pages.via_obras=p;renderObrasVia();}
+
+// ════ AERÓDROMOS ══════════════════════════════════════════════════════════════
+async function initAero(){
+  const ld=document.getElementById('aero-load');
+  try{
+    const data=(await fetchSheet(SHEETS.aero)).filter(r=>!Object.values(r).join(' ').match(/classe rbac|especifica/i)&&Object.values(r).some(v=>v&&v.trim()));
+    DB.aero=data;DB.filtered.aero=[...data];ld.classList.remove('show');
+    const keys=Object.keys(data[0]||{});
+    const cN=keys.find(k=>/^nome|aerodro/i.test(k))||keys.find(k=>k.includes('nome'));
+    const cM=keys.find(k=>/municipio/i.test(k));
+    const cO=keys.find(k=>/^operacao|operac/i.test(k));
+    const cI=keys.find(k=>/internacionaliz/i.test(k));
+    const cLat=keys.find(k=>/^lat/i.test(k));
+    const cLng=keys.find(k=>/^lon|^lng/i.test(k));
+    const cIcao=keys.find(k=>/^icao$/i.test(k));
+    const muns=new Set(data.map(r=>cM?r[cM]:'').filter(Boolean));
+
+    document.getElementById('aero-kpi').innerHTML=`
+      <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total Aeródromos</span><span class="kpi-ico">✈️</span></div><div class="kpi-val">${data.length}</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span><span class="kpi-ico">📍</span></div><div class="kpi-val">${muns.size}</div></div>
+      <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Internacionais</span><span class="kpi-ico">🌍</span></div><div class="kpi-val">${data.filter(r=>cI&&r[cI]&&r[cI].trim()&&r[cI]!=='—').length||'—'}</div></div>
+      <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Com ICAO</span><span class="kpi-ico">✈️</span></div><div class="kpi-val">${data.filter(r=>cIcao&&r[cIcao]&&r[cIcao].trim()).length||'—'}</div></div>`;
+
+    if(cO){const m={};data.forEach(r=>{const v=r[cO]||'Sem info';m[v]=(m[v]||0)+1;});mkDoughnut('ch-aero-op',Object.keys(m),Object.values(m));}
+    if(cI){const m={};data.forEach(r=>{const v=(r[cI]||'').trim()||'Sem info';m[v]=(m[v]||0)+1;});mkDoughnut('ch-aero-int',Object.keys(m),Object.values(m),{colors:[PAL.az[0],PAL.am[0],'#CBD5E0']});}
+
+    // Mapa aeródromos
+    const m=mkMap('aero-map',AM_CENTER,5);
+    data.forEach(r=>{
+      const lat=cLat?parseFloat(r[cLat]):null,lng=cLng?parseFloat(r[cLng]):null;
+      if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+        L.marker([lat,lng],{icon:L.divIcon({html:'✈️',className:'',iconSize:[20,20]})})
+          .addTo(m)
+          .bindPopup(`<b>${(cN?r[cN]:'')||r[Object.keys(r)[0]]||'Aeródromo'}</b><br>${cM?r[cM]||'':''}`);
+      }
+    });
+
+    // Filtro tipo operação
+    if(cO){const tipos=new Set(data.map(r=>r[cO]).filter(Boolean));const sel=document.getElementById('aero-op-f');[...tipos].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});}
+
+    const cols=keys.filter(k=>['icao','ciad','nome','municipio','operacao','comprimento','largura','superficie'].some(c=>k.includes(c))).slice(0,8);
+    window._aeroCols=cols.length?cols:keys.slice(0,8);
+    renderAero();
+
+    const obras=DB.geral.filter(r=>Object.values(r).join(' ').toLowerCase().match(/aero|pista|aerodro/));
+    initObrasAero(obras);
+
+    document.getElementById('hs-aero').textContent=data.length;
+    DB.ready.aero=true;
+  }catch(e){ld.textContent='⚠️ '+e.message;console.error(e);}
+}
+function filtrarAero(){
+  const q=(document.getElementById('aero-q')?.value||'').toLowerCase();
+  const op=document.getElementById('aero-op-f')?.value||'';
+  const keys=Object.keys(DB.aero[0]||{});
+  const cO=keys.find(k=>/^operacao|operac/i.test(k));
+  DB.filtered.aero=DB.aero.filter(r=>{
+    const mq=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));
+    const mo=!op||r[cO]===op;
+    return mq&&mo;
+  });
+  DB.pages.aero=1;renderAero();
+}
+function renderAero(p=null){
+  if(p!==null)DB.pages.aero=p;
+  mkTable('aero-table',DB.filtered.aero,window._aeroCols||null,DB.pages.aero||1);
+  document.getElementById('aero-cnt').textContent=`${DB.filtered.aero.length} aeródromos`;
+  mkPag('aero-pag',DB.filtered.aero.length,DB.pages.aero||1,'goPageAero');
+}
+function goPageAero(p){DB.pages.aero=p;renderAero();}
+function initObrasAero(obras){
+  DB.geral_aero=obras;DB.filtered.aero_obras=[...obras];renderObrasAero();
+}
+function filtrarObrasAero(){
+  const q=(document.getElementById('aero-obras-q')?.value||'').toLowerCase();
+  DB.filtered.aero_obras=(DB.geral_aero||[]).filter(r=>!q||Object.values(r).some(v=>v.toLowerCase().includes(q)));
+  DB.pages.aero_obras=1;renderObrasAero();
+}
+function renderObrasAero(){
+  const data=DB.filtered.aero_obras||[];
+  mkTable('aero-obras-table',data,null,DB.pages.aero_obras);
+  document.getElementById('aero-obras-cnt').textContent=`${data.length} obras`;
+  mkPag('aero-obras-pag',data.length,DB.pages.aero_obras,'goPageObrasAero');
+  document.getElementById('aero-obras-kpi').innerHTML=`<div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Obras Aeroportuárias</span></div><div class="kpi-val">${data.length}</div></div>`;
+}
+function goPageObrasAero(p){DB.pages.aero_obras=p;renderObrasAero();}
+
+// ════ TERMINAIS ═══════════════════════════════════════════════════════════════
+async function initTerm(){
+  const ld=document.getElementById('term-load');
+  try{
+    const data=(await fetchSheet(SHEETS.term)).filter(r=>Object.values(r).some(v=>v&&v.trim()&&v!=='—'));
+    DB.term=data;ld.classList.remove('show');
+    const keys=Object.keys(data[0]||{});
+    const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+    const cL=keys.find(k=>/local|comuni/i.test(k));
+    const cG=keys.find(k=>/^gov$/i.test(k));
+    const cP=keys.find(k=>/proc/i.test(k));
+    const cAs=keys.find(k=>/assin/i.test(k));
+    const cSo=keys.find(k=>/solic/i.test(k));
+
+    const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+    document.getElementById('term-kpi').innerHTML=`
+      <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Total Terminais</span><span class="kpi-ico">⚓</span></div><div class="kpi-val">${data.length}</div></div>
+      <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span><span class="kpi-ico">📍</span></div><div class="kpi-val">${muns.size}</div></div>
+      <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Gov. Estadual</span><span class="kpi-ico">🏛️</span></div><div class="kpi-val">${data.filter(r=>cG&&['CH','SEINFRA','2','ESTADO'].includes((r[cG]||'').toUpperCase().trim())).length}</div></div>`;
+
+    if(cM){const m={};data.forEach(r=>{const v=r[cM]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);mkBar('ch-term-mun',t.map(e=>e[0]),t.map(e=>e[1]),{horizontal:true,single:true,colors:PAL.az[0]});}
+    if(cSo){const m={};data.forEach(r=>{const v=r[cSo]||'—';m[v]=(m[v]||0)+1;});mkDoughnut('ch-term-sol',Object.keys(m),Object.values(m));}
+
+    // Mapa terminais (sem lat/lng confiável, mostrar por município)
+    mkMap('term-map',AM_CENTER,5);
+
+    // Cards
+    document.getElementById('term-cards').innerHTML=data.map((r,i)=>`
+      <div class="term-card" onclick="abrirMM('${(r[cM]||'Terminal').replace(/'/g,'`')}',${i},'term')">
+        <div style="display:flex;align-items:flex-start;gap:.7rem;margin-bottom:.6rem">
+          <div style="width:34px;height:34px;border-radius:9px;background:var(--az-cl);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">⚓</div>
+          <div><div style="font-size:.82rem;font-weight:800;color:var(--az);line-height:1.2">${r[cM]||'—'}</div>${cL?`<div style="font-size:.65rem;color:var(--cz2)">${r[cL]||''}</div>`:''}</div>
+        </div>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+          ${cG&&r[cG]?`<span class="pill az">${r[cG]}</span>`:''}
+          ${cP&&r[cP]?`<span class="pill cz">📋 ${r[cP]}</span>`:''}
+          ${cAs&&r[cAs]?`<span class="pill vd">📅 ${r[cAs]}</span>`:''}
+        </div>
+      </div>`).join('');
+
+    const obras=DB.geral.filter(r=>Object.values(r).join(' ').toLowerCase().match(/terminal|flutuante|fluvial|porto/));
+    initObrasTerminais(obras);
+
+    document.getElementById('hs-term').textContent=data.length;
+    DB.ready.term=true;
+  }catch(e){ld.textContent='⚠️ '+e.message;console.error(e);}
+}
+function initObrasTerminais(obras){
+  DB.geral_term=obras;DB.filtered.term_obras=[...obras];renderObrasTerminais();
+}
+function filtrarObrasTerminais(){
+  const q=(document.getElementById('term-obras-q')?.value||'').toLowerCase();
+  DB.filtered.term_obras=(DB.geral_term||[]).filter(r=>!q||Object.values(r).some(v=>v.toLowerCase().includes(q)));
+  DB.pages.term_obras=1;renderObrasTerminais();
+}
+function renderObrasTerminais(){
+  const data=DB.filtered.term_obras||[];
+  mkTable('term-obras-table',data,null,DB.pages.term_obras);
+  document.getElementById('term-obras-cnt').textContent=`${data.length} obras`;
+  mkPag('term-obras-pag',data.length,DB.pages.term_obras,'goPageObrasTerminais');
+  document.getElementById('term-obras-kpi').innerHTML=`<div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Obras / Terminais</span></div><div class="kpi-val">${data.length}</div></div>`;
+}
+function goPageObrasTerminais(p){DB.pages.term_obras=p;renderObrasTerminais();}
+
+// ════ MINI MODAL ══════════════════════════════════════════════════════════════
+function abrirMM(title,idx,src){
+  let data;
+  if(src==='term')data=DB.term[idx];
+  else if(src==='aero')data=DB.aero[idx];
+  if(!data)return;
+  document.getElementById('mm-title').textContent=title;
+  const campos=Object.entries(data).filter(([,v])=>v&&v.trim()&&v!=='—');
+  document.getElementById('mm-body').innerHTML=`<div style="display:grid;gap:.6rem">${campos.map(([k,v])=>`<div style="padding:.5rem .7rem;background:var(--bg);border-radius:7px"><div style="font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cz2);margin-bottom:.15rem">${k.replace(/_/g,' ')}</div><div style="font-size:.78rem;font-weight:500;color:var(--tz)">${v}</div></div>`).join('')}</div>`;
+  document.getElementById('mm-ov').classList.add('show');
+  document.getElementById('mm').classList.add('show');
+}
+function fecharMM(){
+  document.getElementById('mm-ov').classList.remove('show');
+  document.getElementById('mm').classList.remove('show');
+}
+
+// ════ BI ══════════════════════════════════════════════════════════════════════
+async function initBI(){
+  document.getElementById('bi-load').classList.add('show');
+  // Atualiza com dados já carregados
+  setTimeout(()=>{renderBiGeral();document.getElementById('bi-load').classList.remove('show');},500);
+
+  // Municípios
+  const MUNS_DATA={
+    'MANAUS':{pop:'2.063.547',idh:'0,737',area:'11.401 km²',pib:'R$ 79,4 bi'},
+    'PARINTINS':{pop:'96.372',idh:'0,658',area:'5.952 km²',pib:'R$ 1,4 bi'},
+    'ITACOATIARA':{pop:'103.598',idh:'0,644',area:'8.891 km²',pib:'R$ 2,4 bi'},
+    'MANACAPURU':{pop:'101.883',idh:'0,614',area:'7.330 km²',pib:'R$ 1,5 bi'},
+    'COARI':{pop:'70.616',idh:'0,586',area:'57.920 km²',pib:'R$ 3,4 bi'}
+  };
+  const biMunSel=document.getElementById('bi-mun-sel');
+  const todosM=new Set([...DB.ram.map(r=>{const k=Object.keys(r)[0];return r[k];}), ...DB.via.map(r=>{const k=Object.keys(r).find(k=>/munic/i.test(k));return k?r[k]:'';}), ...Object.keys(MUNS_DATA)].filter(Boolean));
+  [...todosM].sort().forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;biMunSel.appendChild(o);});
+
+  // Rodovias BI
+  renderBiRod();
+  // Ramais BI
+  DB.filtered.bi_ram=[...DB.ram];renderBiRam();
+  // Viário BI
+  DB.filtered.bi_via=[...DB.via];renderBiVia();
+  // Aeródromos BI
+  DB.filtered.bi_aero=[...DB.aero];renderBiAero();
+  // Terminais BI
+  DB.filtered.bi_term=[...DB.term];renderBiTerm();
+
+  // Popula filtros BI Ramais
+  if(DB.ram.length){const k=Object.keys(DB.ram[0]);const cM=k.find(k=>/munic/i.test(k))||k[0];const muns=new Set(DB.ram.map(r=>r[cM]).filter(Boolean));const sel=document.getElementById('bi-ram-mun-f');[...muns].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});}
+  if(DB.via.length){const k=Object.keys(DB.via[0]);const cM=k.find(k=>/munic/i.test(k))||k[0];const muns=new Set(DB.via.map(r=>r[cM]).filter(Boolean));const sel=document.getElementById('bi-via-mun-f');[...muns].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});}
+}
+
+function renderBiGeral(){
+  document.getElementById('bi-n-rod').textContent=DB.rod.length||'—';
+  document.getElementById('bi-n-ram').textContent=DB.ram.length||'—';
+  document.getElementById('bi-n-via').textContent=DB.via.length||'—';
+  document.getElementById('bi-n-aero').textContent=DB.aero.length||'—';
+  document.getElementById('bi-n-term').textContent=DB.term.length||'—';
+  document.getElementById('bi-n-sin').textContent=DB.sin.length||'—';
+
+  const labels=['Rodovias','Ramais','Viário','Aeródromos','Terminais','Sinistros'];
+  const counts=[DB.rod.length,DB.ram.length,DB.via.length,DB.aero.length,DB.term.length,DB.sin.length];
+  mkBar('ch-bi-dist',labels,counts,{colors:PAL.ml.slice(0,6)});
+
+  const getMunCnt=data=>{const k=Object.keys(data[0]||{});const cM=k.find(k=>/munic/i.test(k))||k[0];return new Set(data.map(r=>r[cM]).filter(Boolean)).size;};
+  const covs=[
+    DB.rod.length?new Set(DB.rod.map(r=>Object.values(r)[0])).size:0,
+    DB.ram.length?getMunCnt(DB.ram):0,
+    DB.via.length?getMunCnt(DB.via):0,
+    DB.aero.length?getMunCnt(DB.aero):0,
+    DB.term.length?getMunCnt(DB.term):0,
+    0
+  ];
+  mkBar('ch-bi-mun',labels,covs,{colors:PAL.am[0],single:true});
+}
+
+function analisarBiMun(){
+  const mun=document.getElementById('bi-mun-sel').value;if(!mun)return;
+  const mn=mun.toUpperCase();
+  const ramaisMun=DB.ram.filter(r=>Object.values(r).some(v=>(v||'').toUpperCase().includes(mn))).length;
+  const viasMun=DB.via.filter(r=>Object.values(r).some(v=>(v||'').toUpperCase().includes(mn))).length;
+  const aeroMun=DB.aero.filter(r=>Object.values(r).some(v=>(v||'').toUpperCase().includes(mn))).length;
+  const termMun=DB.term.filter(r=>Object.values(r).some(v=>(v||'').toUpperCase().includes(mn))).length;
+  document.getElementById('bi-mun-result').style.display='block';
+  document.getElementById('bi-mun-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Ramais</span></div><div class="kpi-val">${ramaisMun}</div></div>
+    <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Vias Urbanas</span></div><div class="kpi-val">${viasMun}</div></div>
+    <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Aeródromos</span></div><div class="kpi-val">${aeroMun}</div></div>
+    <div class="kpi cn"><div class="kpi-hdr"><span class="kpi-lbl">Terminais</span></div><div class="kpi-val">${termMun}</div></div>`;
+  mkDoughnut('ch-bi-mun-dist',['Ramais','Vias','Aeródromos','Terminais'],[ramaisMun||1,viasMun||1,aeroMun||1,termMun||1]);
+  // Info IBGE
+  const MUNS={
+    'MANAUS':{pop:'2.063.547',idh:'0,737',area:'11.401 km²',pib:'R$ 79,4 bi'},
+    'PARINTINS':{pop:'96.372',idh:'0,658',area:'5.952 km²',pib:'R$ 1,4 bi'},
+    'ITACOATIARA':{pop:'103.598',idh:'0,644',area:'8.891 km²',pib:'R$ 2,4 bi'},
+    'MANACAPURU':{pop:'101.883',idh:'0,614',area:'7.330 km²',pib:'R$ 1,5 bi'},
+    'COARI':{pop:'70.616',idh:'0,586',area:'57.920 km²',pib:'R$ 3,4 bi'},
+    'TABATINGA':{pop:'66.764',idh:'0,616',area:'3.224 km²',pib:'R$ 758 M'},
+    'HUMAITÁ':{pop:'57.473',idh:'0,605',area:'33.111 km²',pib:'R$ 860 M'},
+    'TEFÉ':{pop:'73.669',idh:'0,639',area:'23.692 km²',pib:'R$ 1,1 bi'},
+  };
+  const info=MUNS[mn]||{};
+  document.getElementById('bi-mun-info').innerHTML=Object.keys(info).length?`<div style="display:grid;gap:.4rem">${Object.entries({...{População:info.pop,IDH:info.idh,'Área':info.area,PIB:info.pib}}).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:.4rem .6rem;background:var(--bg);border-radius:6px"><span style="font-size:.65rem;color:var(--cz2)">${k}</span><span style="font-size:.72rem;font-weight:700;color:var(--tz)">${v}</span></div>`).join('')}</div>`:'<div style="color:var(--cz2);font-size:.75rem">Dados IBGE não disponíveis para este município</div>';
+}
+
+function renderBiRod(){
+  const data=DB.rod;
+  const gExt=r=>parseFloat((r.extensao||r.extensao_km||'0').replace(',','.'))||0;
+  const gJur=r=>r.jurisdicao||r.jurisdição||'';
+  const totExt=data.reduce((s,r)=>s+gExt(r),0);
+  const estadual=data.filter(r=>gJur(r).toLowerCase().includes('estadual')).length;
+  document.getElementById('bi-rod-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Trechos</span></div><div class="kpi-val">${data.length}</div></div>
+    <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Extensão</span></div><div class="kpi-val">${totExt.toFixed(0)}</div><div class="kpi-sub">km</div></div>
+    <div class="kpi vd"><div class="kpi-hdr"><span class="kpi-lbl">Estaduais</span></div><div class="kpi-val">${estadual}</div></div>`;
+  // Accordion por rodovia
+  const gCod=r=>{for(const v of Object.values(r)){const m=(v||'').match(/\b(AM|BR)-?\s*(\d{3})\b/i);if(m)return m[0].toUpperCase();}return '';};
+  const rodMap={};data.forEach(r=>{const c=gCod(r);if(!c)return;if(!rodMap[c])rodMap[c]=[];rodMap[c].push(r);});
+  document.getElementById('bi-rod-acc').innerHTML=Object.keys(rodMap).sort().map((cod,i)=>{
+    const t=rodMap[cod];const ext=t.reduce((s,r)=>s+gExt(r),0);
+    return `<div class="acc-group"><div class="acc-head" id="biaccH${i}" onclick="toggleBiAcc('biaccH${i}','biaccB${i}')"><div class="acc-info"><span class="acc-cod">${cod}</span><span class="acc-stat">${t.length} trecho${t.length>1?'s':''}</span>${ext?`<span class="acc-stat">${ext.toFixed(2)} km</span>`:''}</div><span class="acc-chev" id="biaccC${i}">▼</span></div><div class="acc-body" id="biaccB${i}" style="display:none"><div style="overflow-x:auto"><table><thead><tr><th>Sentido</th><th>Jurisdição</th><th>KM Ini</th><th>KM Fim</th><th>Extensão</th><th>Região</th></tr></thead><tbody>${t.map(r=>`<tr><td>${r.sentido||'—'}</td><td>${gJur(r)||'—'}</td><td>${r.km_inicial||'—'}</td><td>${r.km_final||'—'}</td><td>${gExt(r)>0?gExt(r).toFixed(2)+' km':'—'}</td><td>${r.regiao||r.região||'—'}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+  }).join('')||'<div class="empty"><div class="empty-ico">🛣️</div><div class="empty-txt">Aguardando carregamento dos dados</div></div>';
+}
+
+function renderBiRam(){
+  const data=DB.filtered.bi_ram;
+  const keys=Object.keys(data[0]||{});
+  const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+  document.getElementById('bi-ram-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Ramais</span></div><div class="kpi-val">${data.length}</div></div>
+    <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span></div><div class="kpi-val">${muns.size}</div></div>`;
+  const cS=keys.find(k=>/situa/i.test(k));
+  const cC=keys.find(k=>/calha|bacia/i.test(k));
+  if(cS){const m={};data.forEach(r=>{const v=r[cS]||'—';m[v]=(m[v]||0)+1;});mkDoughnut('ch-bi-ram-sit',Object.keys(m),Object.values(m));}
+  if(cC){const m={};data.forEach(r=>{const v=r[cC]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,6);mkBar('ch-bi-ram-cal',t.map(e=>e[0]),t.map(e=>e[1]),{colors:PAL.ml.slice(0,6)});}
+  mkTable('bi-ram-table',data,null,DB.pages.bi_ram);
+  document.getElementById('bi-ram-cnt').textContent=`${data.length} registros`;
+  mkPag('bi-ram-pag',data.length,DB.pages.bi_ram,'goPageBiRam');
+}
+function filtrarBiRam(){
+  const q=(document.getElementById('bi-ram-q')?.value||'').toLowerCase();
+  const mun=document.getElementById('bi-ram-mun-f')?.value||'';
+  const keys=Object.keys(DB.ram[0]||{});const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  DB.filtered.bi_ram=DB.ram.filter(r=>{const mq=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));const mm=!mun||r[cM]===mun;return mq&&mm;});
+  DB.pages.bi_ram=1;renderBiRam();
+}
+function goPageBiRam(p){DB.pages.bi_ram=p;renderBiRam();}
+
+function renderBiVia(){
+  const data=DB.filtered.bi_via;
+  const keys=Object.keys(data[0]||{});
+  const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+  document.getElementById('bi-via-kpi').innerHTML=`
+    <div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Registros</span></div><div class="kpi-val">${data.length}</div></div>
+    <div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span></div><div class="kpi-val">${muns.size}</div></div>`;
+  if(cM){const m={};data.forEach(r=>{const v=r[cM]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10);mkBar('ch-bi-via-top',t.map(e=>e[0]),t.map(e=>e[1]),{horizontal:true,colors:PAL.az[0],single:true});const t5=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);mkRank('rank-bi-via-ext',t5.map(([l,v])=>({label:l,value:v})),PAL.vd[0]);}
+  mkTable('bi-via-table',data,null,DB.pages.bi_via);
+  document.getElementById('bi-via-cnt').textContent=`${data.length} registros`;
+  mkPag('bi-via-pag',data.length,DB.pages.bi_via,'goPageBiVia');
+}
+function filtrarBiVia(){
+  const q=(document.getElementById('bi-via-q')?.value||'').toLowerCase();
+  const mun=document.getElementById('bi-via-mun-f')?.value||'';
+  const keys=Object.keys(DB.via[0]||{});const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  DB.filtered.bi_via=DB.via.filter(r=>{const mq=!q||Object.values(r).some(v=>v.toLowerCase().includes(q));const mm=!mun||r[cM]===mun;return mq&&mm;});
+  DB.pages.bi_via=1;renderBiVia();
+}
+function goPageBiVia(p){DB.pages.bi_via=p;renderBiVia();}
+
+function renderBiAero(){
+  const data=DB.filtered.bi_aero;
+  const keys=Object.keys(data[0]||{});
+  const cM=keys.find(k=>/municipio/i.test(k));
+  const cO=keys.find(k=>/^operacao|operac/i.test(k));
+  const cI=keys.find(k=>/internacionaliz/i.test(k));
+  const muns=new Set(data.map(r=>cM?r[cM]:'').filter(Boolean));
+  document.getElementById('bi-aero-kpi').innerHTML=`<div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Aeródromos</span></div><div class="kpi-val">${data.length}</div></div><div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span></div><div class="kpi-val">${muns.size}</div></div>`;
+  if(cO){const m={};data.forEach(r=>{const v=r[cO]||'—';m[v]=(m[v]||0)+1;});mkDoughnut('ch-bi-aero-op',Object.keys(m),Object.values(m));}
+  if(cI){const m={};data.forEach(r=>{const v=(r[cI]||'').trim()||'—';m[v]=(m[v]||0)+1;});mkDoughnut('ch-bi-aero-int',Object.keys(m),Object.values(m),{colors:[PAL.az[0],PAL.am[0],'#CBD5E0']});}
+  mkTable('bi-aero-table',data,null,DB.pages.bi_aero);
+  document.getElementById('bi-aero-cnt').textContent=`${data.length} aeródromos`;
+  mkPag('bi-aero-pag',data.length,DB.pages.bi_aero,'goPageBiAero');
+}
+function filtrarBiAero(){const q=(document.getElementById('bi-aero-q')?.value||'').toLowerCase();DB.filtered.bi_aero=DB.aero.filter(r=>!q||Object.values(r).some(v=>v.toLowerCase().includes(q)));DB.pages.bi_aero=1;renderBiAero();}
+function goPageBiAero(p){DB.pages.bi_aero=p;renderBiAero();}
+
+function renderBiTerm(){
+  const data=DB.filtered.bi_term;
+  const keys=Object.keys(data[0]||{});
+  const cM=keys.find(k=>/munic/i.test(k))||keys[0];
+  const cSo=keys.find(k=>/solic/i.test(k));
+  const muns=new Set(data.map(r=>r[cM]).filter(Boolean));
+  document.getElementById('bi-term-kpi').innerHTML=`<div class="kpi az"><div class="kpi-hdr"><span class="kpi-lbl">Terminais</span></div><div class="kpi-val">${data.length}</div></div><div class="kpi am"><div class="kpi-hdr"><span class="kpi-lbl">Municípios</span></div><div class="kpi-val">${muns.size}</div></div>`;
+  if(cM){const m={};data.forEach(r=>{const v=r[cM]||'—';m[v]=(m[v]||0)+1;});const t=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);mkBar('ch-bi-term-mun',t.map(e=>e[0]),t.map(e=>e[1]),{horizontal:true,colors:PAL.az[0],single:true});}
+  if(cSo){const m={};data.forEach(r=>{const v=r[cSo]||'—';m[v]=(m[v]||0)+1;});mkDoughnut('ch-bi-term-sol',Object.keys(m),Object.values(m));}
+  mkTable('bi-term-table',data,null,DB.pages.bi_term);
+  document.getElementById('bi-term-cnt').textContent=`${data.length} terminais`;
+  mkPag('bi-term-pag',data.length,DB.pages.bi_term,'goPageBiTerm');
+}
+function filtrarBiTerm(){const q=(document.getElementById('bi-term-q')?.value||'').toLowerCase();DB.filtered.bi_term=DB.term.filter(r=>!q||Object.values(r).some(v=>v.toLowerCase().includes(q)));DB.pages.bi_term=1;renderBiTerm();}
+function goPageBiTerm(p){DB.pages.bi_term=p;renderBiTerm();}
+
+function setBiPage(id,btn){
+  document.querySelectorAll('.bi-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bi-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('bip-'+id)?.classList.add('active');
+  btn.classList.add('active');
+  setTimeout(()=>{Object.values(mapInstances).forEach(m=>{try{m.invalidateSize()}catch(e){}});},100);
+}
+
+// ════ ATLAS ═══════════════════════════════════════════════════════════════════
+let atlasMap=null;let atlasBases={};let atlasCurBase='pad';
+let atlasLayers={aero:null,term:null};
+function initAtlas(){
+  if(atlasMap){atlasMap.remove();atlasMap=null;}
+  const m=L.map('map-atlas',{zoomControl:true}).setView(AM_CENTER,5);
+  const pad=L.tileLayer(TILE_OSM,{maxZoom:19,attribution:'© OpenStreetMap'});
+  const sat=L.tileLayer(TILE_SAT,{maxZoom:18,attribution:'© Esri World Imagery'});
+  const esc=L.tileLayer(TILE_ESC,{maxZoom:19,attribution:'© Carto'});
+  atlasBases={pad,sat,esc};pad.addTo(m);
+  atlasMap=m;mapInstances['map-atlas']=m;
+
+  // Camada de aeródromos
+  if(DB.aero.length){
+    const aeroGrp=L.layerGroup();
+    const keys=Object.keys(DB.aero[0]||{});
+    const cLat=keys.find(k=>/^lat/i.test(k));
+    const cLng=keys.find(k=>/^lon|^lng/i.test(k));
+    const cN=keys.find(k=>/^nome|aerodro/i.test(k))||keys[0];
+    DB.aero.forEach(r=>{
+      const lat=cLat?parseFloat(r[cLat]):null,lng=cLng?parseFloat(r[cLng]):null;
+      if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+        L.marker([lat,lng],{icon:L.divIcon({html:'<div style="font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,.5)">✈️</div>',className:'',iconSize:[20,20]})})
+          .addTo(aeroGrp).bindPopup(`<b>${r[cN]||'Aeródromo'}</b>`);
+      }
+    });
+    atlasLayers.aero=aeroGrp;
+    aeroGrp.addTo(m);
+    L.control.layers({},{Aeródromos:aeroGrp},{collapsed:false,position:'topright'}).addTo(m);
+  }
+
+  // Municípios AM do GitHub
+  fetch('https://leonzordhue.github.io/atlas-amazonas/geojson/municipios.geojson')
+    .then(r=>r.ok?r.json():null).then(gj=>{
+      if(!gj)return;
+      L.geoJSON(gj,{style:{color:'#002D72',weight:1,fillOpacity:0.05,fillColor:'#002D72'},
+        onEachFeature:(f,l)=>{l.bindPopup(`<b>${f.properties.NM_MUN||'Município'}</b>`);}
+      }).addTo(m);
+    }).catch(()=>{});
+
+  // Traçados aproximados das principais rodovias no atlas
+  const rodAtlas=[
+    {nome:'BR-174',coords:[[-3.13,-59.98],[-2.5,-60.0],[-1.5,-61.0],[0,-61.5],[2.8,-60.7]],cor:'#C0392B'},
+    {nome:'BR-319',coords:[[-3.13,-59.98],[-4.5,-60.8],[-6.5,-62.0],[-8.8,-63.9]],cor:'#E67E22'},
+    {nome:'AM-070',coords:[[-3.13,-59.98],[-3.9,-61.0],[-4.8,-62.2]],cor:'#002D72'},
+    {nome:'AM-010',coords:[[-3.13,-59.98],[-2.6,-59.3]],cor:'#0052CC'},
+    {nome:'BR-230',coords:[[-3.13,-59.98],[-4.0,-56.5],[-4.5,-55.5]],cor:'#8B6914'},
+  ];
+  const rodGrp=L.layerGroup();
+  rodAtlas.forEach(r=>{
+    L.polyline(r.coords,{color:r.cor,weight:3,opacity:.75,dashArray:r.nome.startsWith('AM')?'6,3':null})
+      .addTo(rodGrp).bindTooltip(r.nome,{permanent:false,direction:'auto'});
+  });
+  rodGrp.addTo(m);
+}
+function setAtlasBase(b){
+  Object.keys(atlasBases).forEach(k=>{if(atlasMap.hasLayer(atlasBases[k]))atlasMap.removeLayer(atlasBases[k]);});
+  atlasBases[b].addTo(atlasMap);atlasCurBase=b;
+  document.querySelectorAll('[id^=atlas-base-]').forEach(btn=>{btn.className='btn btn-out btn-sm';});
+  document.getElementById('atlas-base-'+b).className='btn btn-az btn-sm';
+}
+
+// ════ EXPORTS ══════════════════════════════════════════════════════════════════
+async function exportPDFGeneric(el,nome){
+  try{
+    const canvas=await html2canvas(el,{scale:2,useCORS:true});
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const imgData=canvas.toDataURL('image/png');
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    pdf.addImage(imgData,'PNG',0,0,pw,ph);
+    pdf.save(nome||'seinfra_export.pdf');
+  }catch(e){alert('Erro ao exportar PDF: '+e.message);}
+}
+function exportPDFRod(){exportPDFGeneric(document.getElementById('rod-result'),'seinfra_rodovia.pdf');}
+function exportPDFRamal(){exportPDFGeneric(document.getElementById('ram-consult-wrap'),'seinfra_ramal.pdf');}
+function exportPDFVia(){exportPDFGeneric(document.getElementById('via-consult'),'seinfra_viario.pdf');}
+async function exportPDFAtlas(){
+  if(!atlasMap)return;
+  try{
+    const el=document.getElementById('map-atlas');
+    const canvas=await html2canvas(el,{scale:2,useCORS:true,allowTaint:true});
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pw,ph);
+    const c=atlasMap.getCenter();
+    pdf.setFontSize(8);pdf.setTextColor(100);
+    pdf.text(`Atlas SEINFRA/AM | Centro: ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)} | Zoom: ${atlasMap.getZoom()}`,8,ph-4);
+    pdf.save('atlas_amazonas.pdf');
+  }catch(e){alert('Erro: '+e.message);}
+}
+
+// ─── TOGGLE ACCORDION BI ─────────────────────────────────────────────────────
+function toggleBiAcc(headId,bodyId){
+  const head=document.getElementById(headId);
+  const body=document.getElementById(bodyId);
+  const chev=document.getElementById(headId.replace('biaccH','biaccC'));
+  if(!head||!body)return;
+  const open=body.style.display==='none'||!body.style.display;
+  body.style.display=open?'block':'none';
+  if(chev)chev.textContent=open?'▲':'▼';
+  head.classList.toggle('open',open);
+}
+
+// ─── MAPA RODOVIA COM TRAÇADO ─────────────────────────────────────────────────
+function renderMapRod(cod){
+  if(!mapInstances['rod-map']){mkMap('rod-map',AM_CENTER,6);}
+  const m=mapInstances['rod-map'];
+  m.eachLayer(l=>{if(!(l instanceof L.TileLayer)&&!(l instanceof L.LayersControl)&&!(l instanceof L.Control))try{m.removeLayer(l);}catch(e){}});
+  const ROD_COORDS={
+    'AM-010':[[-3.13,-59.98],[-2.9,-59.7],[-2.6,-59.3],[-2.4,-59.1]],
+    'AM-070':[[-3.13,-59.98],[-3.4,-60.4],[-3.9,-61.0],[-4.3,-61.8],[-4.8,-62.2]],
+    'AM-352':[[-3.2,-60.0],[-3.6,-60.9],[-4.0,-61.6],[-4.3,-62.1]],
+    'AM-254':[[-3.9,-62.1],[-4.4,-63.2],[-4.9,-64.3],[-5.2,-65.2]],
+    'AM-230':[[-4.1,-63.1],[-4.6,-64.1],[-5.1,-65.3],[-5.6,-66.1]],
+    'AM-363':[[-2.6,-56.7],[-3.0,-57.4],[-3.5,-58.1]],
+    'AM-010/AM-070':[[-3.13,-59.98],[-3.2,-60.05]],
+    'BR-174':[[-3.13,-59.98],[-2.5,-60.0],[-1.8,-61.0],[-0.8,-61.4],[0.5,-60.7],[2.0,-60.5],[2.8,-60.7]],
+    'BR-319':[[-3.13,-59.98],[-4.1,-60.6],[-5.2,-61.7],[-6.6,-62.6],[-8.0,-63.3],[-8.8,-63.9]],
+    'BR-230':[[-3.13,-59.98],[-3.6,-58.1],[-4.1,-56.6],[-4.5,-55.5]],
+    'AM-156':[[-0.8,-51.5],[-1.2,-52.5],[-2.0,-53.5],[-2.5,-54.0]],
+    'AM-360':[[-3.1,-59.9],[-3.5,-60.2],[-4.0,-60.8]],
+    'AM-010':[[-3.1,-59.9],[-2.8,-59.5],[-2.4,-59.1]],
+  };
+  const coords=ROD_COORDS[cod];
+  if(coords&&coords.length>1){
+    const poly=L.polyline(coords,{color:'#002D72',weight:5,opacity:.85}).addTo(m);
+    L.circleMarker(coords[0],{radius:8,color:'#002D72',fillColor:'#002D72',fillOpacity:1}).addTo(m).bindPopup(`<b>${cod}</b> — Início`);
+    L.circleMarker(coords[coords.length-1],{radius:8,color:'#C0392B',fillColor:'#C0392B',fillOpacity:1}).addTo(m).bindPopup(`<b>${cod}</b> — Fim`);
+    m.fitBounds(poly.getBounds(),{padding:[40,40]});
+  }else{m.setView(AM_CENTER,5);}
+}
+
+// ─── EXPORTAR CSV ─────────────────────────────────────────────────────────────
+function exportCSV(data,nome){
+  if(!data||!data.length)return;
+  const keys=Object.keys(data[0]);
+  const csv=[keys.join(','),...data.map(r=>keys.map(k=>`"${(r[k]||'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=nome;a.click();URL.revokeObjectURL(url);
+}
+
+// ════ CLOCK & INIT ════════════════════════════════════════════════════════════
+function tick(){
+  const n=new Date();
+  const dt=n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+  const hr=n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clk').textContent=hr;
+  document.getElementById('dt').textContent=dt+' · '+hr;
+}
+setInterval(tick,1000);tick();
+
+// ════ BOOT ════════════════════════════════════════════════════════════════════
+(async function boot(){
+  console.log('[AKE] PAINEL MOBILIDADE v2.0 — SEINFRA/AM — BOOT');
+  // Carrega dados gerais primeiro
+  try{
+    const [d1,d2]=await Promise.all([fetchSheet(SHEETS.geral1),fetchSheet(SHEETS.geral2)]);
+    DB.geral=[...d1,...d2];
+    console.log('[GERAL] Carregado:',DB.geral.length,'registros');
+  }catch(e){console.warn('[GERAL]',e.message);}
+
+  // Pré-carrega dados silenciosamente para o hero
+  Promise.all([
+    fetchSheet(SHEETS.rod).then(d=>{DB.rod=d;document.getElementById('hs-rod').textContent=d.length;}).catch(()=>{}),
+    fetchSheet(SHEETS.ramais,'661002456').then(d=>{DB.ram=d;document.getElementById('hs-ram').textContent=d.length;}).catch(()=>{}),
+    fetchSheet(SHEETS.viario).then(d=>{DB.via=d.filter(r=>!Object.values(r).join(' ').toLowerCase().match(/\bramal\b/));document.getElementById('hs-via').textContent=DB.via.length;}).catch(()=>{}),
+    fetchSheet(SHEETS.aero).then(d=>{DB.aero=d.filter(r=>Object.values(r).some(v=>v&&v.trim()));document.getElementById('hs-aero').textContent=d.length;}).catch(()=>{}),
+    fetchSheet(SHEETS.term).then(d=>{DB.term=d.filter(r=>Object.values(r).some(v=>v&&v.trim()&&v!=='—'));document.getElementById('hs-term').textContent=DB.term.length;}).catch(()=>{}),
+    fetchSheet(SHEETS.sinistro).then(d=>{DB.sin=d;}).catch(()=>{}),
+  ]);
+  console.log('[AKE] Boot concluído');
+})();
+</script>
+</body>
+</html>
